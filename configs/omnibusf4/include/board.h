@@ -33,8 +33,8 @@
  *
  ************************************************************************************/
 
-#ifndef __CONFIG_STM32F4DISCOVERY_INCLUDE_BOARD_H
-#define __CONFIG_STM32F4DISCOVERY_INCLUDE_BOARD_H
+#ifndef __CONFIG_OMNIBUSF4_INCLUDE_BOARD_H
+#define __CONFIG_OMNIBUSF4_INCLUDE_BOARD_H
 
 /************************************************************************************
  * Included Files
@@ -227,13 +227,6 @@
 #define LED_ASSERTION     6  /* LED1 + LED2 + LED3 */
 #define LED_PANIC         7  /* N/C  + N/C  + N/C + LED4 */
 
-/* Button definitions ***************************************************************/
-/* The STM32F4 Discovery supports one button: */
-
-#define BUTTON_USER        0
-#define NUM_BUTTONS        1
-#define BUTTON_USER_BIT    (1 << BUTTON_USER)
-
 /* Alternate function pin selections ************************************************/
 /* CAN */
 
@@ -365,29 +358,6 @@
 #define GPIO_TIM8_CH1IN   GPIO_TIM8_CH1IN_1
 #define GPIO_TIM8_CH2IN   GPIO_TIM8_CH2IN_1
 
-/* Ethernet *************************************************************************/
-
-#if defined(CONFIG_STM32F4DISBB) && defined(CONFIG_STM32_ETHMAC)
-  /* RMII interface to the LAN8720 PHY */
-
-#  ifndef CONFIG_STM32_RMII
-#    error CONFIG_STM32_RMII must be defined
-#  endif
-
-  /* Clocking is provided by an external 25Mhz XTAL */
-
-#  ifndef CONFIG_STM32_RMII_EXTCLK
-#    error CONFIG_STM32_RMII_EXTCLK must be defined
-#  endif
-
-  /* Pin disambiguation */
-
-#  define GPIO_ETH_RMII_TX_EN GPIO_ETH_RMII_TX_EN_1
-#  define GPIO_ETH_RMII_TXD0  GPIO_ETH_RMII_TXD0_1
-#  define GPIO_ETH_RMII_TXD1  GPIO_ETH_RMII_TXD1_1
-#  define GPIO_ETH_PPS_OUT    GPIO_ETH_PPS_OUT_1
-
-#endif
 
 /* DMA Channl/Stream Selections *****************************************************/
 /* Stream selections are arbitrary for now but might become important in the future
@@ -400,4 +370,4 @@
 
 #define DMAMAP_SDIO DMAMAP_SDIO_1
 
-#endif  /* __CONFIG_STM32F4DISCOVERY_INCLUDE_BOARD_H */
+#endif  /* __CONFIG_OMNIBUSF4_INCLUDE_BOARD_H */
