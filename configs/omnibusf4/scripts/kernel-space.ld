@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/scripts/kernel-space.ld
+ * configs/omnibusf4/scripts/kernel-space.ld
  *
  *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

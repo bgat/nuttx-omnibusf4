@@ -41,10 +41,11 @@
 ASRCS =
 CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c
 
+# TODO: we don't have any LED support yet
 ifeq ($(CONFIG_ARCH_LEDS),y)
-CSRCS += stm32_autoleds.c
+#CSRCS += stm32_autoleds.c
 else
-CSRCS += stm32_userleds.c
+#CSRCS += stm32_userleds.c
 endif
 
 ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
@@ -61,10 +62,6 @@ endif
 
 ifeq ($(CONFIG_STM32_OTGFS),y)
 CSRCS += stm32_usb.c
-endif
-
-ifeq ($(CONFIG_SENSORS_BMP180),y)
-CSRCS += stm32_bmp180.c
 endif
 
 ifeq ($(CONFIG_STM32_SDIO),y)
@@ -97,6 +94,7 @@ endif
 
 ifeq ($(CONFIG_STM32_FSMC),y)
 CSRCS += stm32_extmem.c
+endif
 
 ifeq ($(CONFIG_TESTING_OSTEST),y)
 CSRCS += stm32_ostest.c

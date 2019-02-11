@@ -292,22 +292,13 @@
 #define GPIO_USART6_RX    GPIO_USART6_RX_1     /* PC7 (also I2S3_MCK and P2 pin 48) */
 #define GPIO_USART6_TX    GPIO_USART6_TX_1     /* PC6 (also P2 pin 47) */
 
-/* PWM
- *
- * The STM32F4 Discovery has no real on-board PWM devices, but the board can be
- * configured to output a pulse train using TIM4 CH2 on PD13.
+/* PWM - motor outputs, etc. are on these pins:
  */
 
-#define GPIO_TIM4_CH2OUT  GPIO_TIM4_CH2OUT_2
-
-/* RGB LED
- *
- * R = TIM1 CH1 on PE9 | G = TIM2 CH2 on PA1 | B = TIM3 CH3 on PB0
- */
-
-#define GPIO_TIM1_CH1OUT  GPIO_TIM1_CH1OUT_2
-#define GPIO_TIM2_CH2OUT  GPIO_TIM2_CH2OUT_1
-#define GPIO_TIM3_CH3OUT  GPIO_TIM3_CH3OUT_1
+#define GPIO_TIM3_CH3OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN0) /* S1_OUT */
+#define GPIO_TIM3_CH4OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN1) /* S2_OUT */
+#define GPIO_TIM2_CH4OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN3) /* S3_OUT */
+#define GPIO_TIM2_CH3OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN2) /* S4_OUT */
 
 /* SPI - There is a MEMS device on SPI1 using these pins: */
 
@@ -353,14 +344,6 @@
 
 #define GPIO_I2C1_SCL     GPIO_I2C1_SCL_1
 #define GPIO_I2C1_SDA     GPIO_I2C1_SDA_2
-
-/* Timer Inputs/Outputs (see the README.txt file for options) */
-
-#define GPIO_TIM2_CH1IN   GPIO_TIM2_CH1IN_2
-#define GPIO_TIM2_CH2IN   GPIO_TIM2_CH2IN_1
-
-#define GPIO_TIM8_CH1IN   GPIO_TIM8_CH1IN_1
-#define GPIO_TIM8_CH2IN   GPIO_TIM8_CH2IN_1
 
 
 /* DMA Channl/Stream Selections *****************************************************/

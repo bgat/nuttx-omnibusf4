@@ -1,7 +1,9 @@
 /************************************************************************************
  * configs/omnibusf4/src/stm32_pwm.c
  *
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2011, 2016 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,35 +55,6 @@
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
-/* Configuration *******************************************************************/
-/* PWM
- *
- * The omnibusf4 has no real on-board PWM devices, but the board can be
- * configured to output a pulse train using TIM4 CH2.  This pin is used by FSMC is
- * connected to CN5 just for this purpose:
- *
- * PD13 FSMC_A18 / MC_TIM4_CH2OUT pin 33 (EnB)
- *
- * FSMC must be disabled in this case!
- */
-
-#define HAVE_PWM 1
-
-#ifndef CONFIG_PWM
-#  undef HAVE_PWM
-#endif
-
-#ifndef CONFIG_STM32_TIM4
-#  undef HAVE_PWM
-#endif
-
-#ifndef CONFIG_STM32_TIM4_PWM
-#  undef HAVE_PWM
-#endif
-
-#if !defined(CONFIG_STM32_TIM4_CHANNEL) || CONFIG_STM32_TIM4_CHANNEL != STM32F4DISCOVERY_PWMCHANNEL
-#  undef HAVE_PWM
-#endif
 
 /************************************************************************************
  * Public Functions
@@ -97,6 +70,8 @@
 
 int stm32_pwm_setup(void)
 {
+	aerr("ERROR: PWM setup not yet implemented!\n");
+	
 #ifdef HAVE_PWM
   static bool initialized = false;
   struct pwm_lowerhalf_s *pwm;

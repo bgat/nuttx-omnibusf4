@@ -1,7 +1,7 @@
 /****************************************************************************
  * configs/omnibusf4/src/omnibusf4.h
  *
- *   Copyright (C) 2019, Bill Gatliff. All rights reserved.
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2011-2012, 2015-2016, 2018 Gregory Nutt. All rights
  *     reserved.
  *   Author: Bill Gatliff <bgat@billgatliff.com>
@@ -185,13 +185,6 @@
                          GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN12)
 
 
-/* PWM outputs */
-
-#define GPIO_TIM3_CH3OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN0) /* S1_OUT */
-#define GPIO_TIM3_CH4OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN1) /* S2_OUT */
-#define GPIO_TIM2_CH4OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN3) /* S3_OUT */
-#define GPIO_TIM2_CH3OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN2) /* S4_OUT */
-	
 /* TODO: SPI chip selects */
 
 #define GPIO_CS_MEMS      (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\

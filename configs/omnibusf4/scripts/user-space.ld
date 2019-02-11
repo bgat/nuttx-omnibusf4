@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/scripts/user-space.ld
+ * configs/omnibusf4/scripts/user-space.ld
  *
  *   Copyright (C) 2013, 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
