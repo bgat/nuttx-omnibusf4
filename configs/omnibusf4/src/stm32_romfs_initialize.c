@@ -1,5 +1,5 @@
 /*****************************************************************************
- * configs/stm32f4discovery/src/stm32_romfs_initialize.c
+ * configs/omnibusf4/src/stm32_romfs_initialize.c
  * This file provides contents of an optional ROMFS volume, mounted at boot.
  *
  *   Copyright (C) 2017 Tomasz Wozniak. All rights reserved.

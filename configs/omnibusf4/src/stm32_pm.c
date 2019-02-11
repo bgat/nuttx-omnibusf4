@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_pm.c
+ * configs/omnibusf4/src/stm32_pm.c
  *
  *   Copyright (C) 2012, 2015 Gregory Nutt. All rights reserved.
  *   Authors: Gregory Nutt <gnutt@nuttx.org>
@@ -45,7 +45,7 @@
 
 #include "up_internal.h"
 #include "stm32_pm.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_PM
 

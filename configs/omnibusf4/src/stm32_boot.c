@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_boot.c
+ * configs/omnibusf4/src/stm32_boot.c
  *
  *   Copyright (C) 2011-2012, 2015, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,7 +48,7 @@
 #include "itm.h"
 
 #include "stm32.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /****************************************************************************
  * Public Functions

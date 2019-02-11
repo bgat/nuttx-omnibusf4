@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_usb.c
+ * configs/omnibusf4/src/stm32_usb.c
  *
  *   Copyright (C) 2012-2013, 2015, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -55,7 +55,7 @@
 #include "up_arch.h"
 #include "stm32.h"
 #include "stm32_otgfs.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_STM32_OTGFS
 

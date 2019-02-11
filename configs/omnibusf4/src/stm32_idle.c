@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_idle.c
+ * configs/omnibusf4/src/stm32_idle.c
  *
  *   Copyright (C) 2012, 2015-2016 Gregory Nutt. All rights reserved.
  *   Authors: Gregory Nutt <gnutt@nuttx.org>
@@ -56,7 +56,7 @@
 #include "stm32_rcc.h"
 #include "stm32_exti.h"
 
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /****************************************************************************
  * Pre-processor Definitions

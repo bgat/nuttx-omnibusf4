@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_pwm.c
+ * configs/omnibusf4/src/stm32_pwm.c
  *
  *   Copyright (C) 2011, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,7 +48,7 @@
 #include "chip.h"
 #include "up_arch.h"
 #include "stm32_pwm.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /************************************************************************************
  * Pre-processor Definitions
@@ -56,7 +56,7 @@
 /* Configuration *******************************************************************/
 /* PWM
  *
- * The stm32f4discovery has no real on-board PWM devices, but the board can be
+ * The omnibusf4 has no real on-board PWM devices, but the board can be
  * configured to output a pulse train using TIM4 CH2.  This pin is used by FSMC is
  * connected to CN5 just for this purpose:
  *

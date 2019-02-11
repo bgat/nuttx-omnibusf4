@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/stm32f4discovery/src/stm32_sdio.c
+ * config/omnibusf4/src/stm32_sdio.c
  *
  *   Copyright (C) 2014, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,7 +48,7 @@
 #include <nuttx/mmcsd.h>
 
 #include "stm32.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef HAVE_SDIO
 

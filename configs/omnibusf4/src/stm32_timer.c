@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/stm32f4discovery/src/stm32_timer.c
+ * config/omnibusf4/src/stm32_timer.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -45,7 +45,7 @@
 #include <debug.h>
 
 #include "stm32_tim.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_TIMER
 

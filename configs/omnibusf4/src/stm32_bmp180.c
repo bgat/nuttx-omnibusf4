@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_bmp180.c
+ * configs/omnibusf4/src/stm32_bmp180.c
  *
  *   Copyright (C) 2015 Alan Carvalho de Assis. All rights reserved.
  *   Author: Alan Carvalho de Assis <acassis@gmail.com>
@@ -47,7 +47,7 @@
 
 #include "stm32.h"
 #include "stm32_i2c.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #if defined(CONFIG_I2C) && defined(CONFIG_SENSORS_BMP180)
 

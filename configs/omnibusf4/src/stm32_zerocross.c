@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_zerocross.c
+ * configs/omnibusf4/src/stm32_zerocross.c
  *
  *   Copyright (C) 2015-2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -47,7 +47,7 @@
 #include <nuttx/sensors/zerocross.h>
 
 #include "stm32_gpio.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_SENSORS_ZEROCROSS
 

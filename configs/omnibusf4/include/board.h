@@ -1,7 +1,9 @@
 /************************************************************************************
- * configs/stm32f4discovery/include/board.h
+ * configs/omnibusf4/include/board.h
  *
+ *   Copyright (C) 2019 Bill Gatliff. All Rights reserved.
  *   Copyright (C) 2012, 2014-2016, 2018 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +48,8 @@
 #  include <stdint.h>
 #  include <stdbool.h>
 #endif
+
+/* TODO: convert from STM32F4 Discovery */
 
 /************************************************************************************
  * Pre-processor Definitions

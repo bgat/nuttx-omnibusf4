@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_can.c
+ * configs/omnibusf4/src/stm32_can.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -50,7 +50,7 @@
 
 #include "stm32.h"
 #include "stm32_can.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_CAN
 

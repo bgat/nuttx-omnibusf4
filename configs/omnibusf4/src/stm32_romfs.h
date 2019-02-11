@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_romfs.h
+ * configs/omnibusf4/src/stm32_romfs.h
  *
  *   Copyright (C) 2017 Tomasz Wozniak. All rights reserved.
  *   Author: Tomasz Wozniak <t.wozniak@samsung.com>

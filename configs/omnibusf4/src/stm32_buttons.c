@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_buttons.c
+ * configs/omnibusf4/src/stm32_buttons.c
  *
  *   Copyright (C) 2011-2012, 2014-2015, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -47,7 +47,7 @@
 #include <arch/board/board.h>
 
 #include "stm32.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifdef CONFIG_ARCH_BUTTONS
 

@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_ostest.c
+ * configs/omnibusf4/src/stm32_ostest.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -49,7 +49,7 @@
 
 #include "up_arch.h"
 #include "up_internal.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /************************************************************************************
  * Pre-processor Definitions

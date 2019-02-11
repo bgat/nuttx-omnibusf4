@@ -49,7 +49,7 @@
 #include "up_arch.h"
 
 #include "stm32.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /************************************************************************************
  * Pre-processor Definitions

@@ -1,5 +1,5 @@
 /****************************************************************************
- * config/stm32f4discovery/src/stm32_appinit.c
+ * config/omnibusf4/src/stm32_appinit.c
  *
  *   Copyright (C) 2012, 2014, 2016, 20018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -41,7 +41,7 @@
 
 #include <nuttx/board.h>
 
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 /****************************************************************************
  * Pre-processor Definitions

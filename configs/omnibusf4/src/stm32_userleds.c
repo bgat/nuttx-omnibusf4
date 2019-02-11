@@ -1,5 +1,5 @@
 /****************************************************************************
- * configs/stm32f4discovery/src/stm32_userleds.c
+ * configs/omnibusf4/src/stm32_userleds.c
  *
  *   Copyright (C) 2011, 2015-2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -52,7 +52,7 @@
 #include "up_internal.h"
 
 #include "stm32.h"
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #ifndef CONFIG_ARCH_LEDS
 

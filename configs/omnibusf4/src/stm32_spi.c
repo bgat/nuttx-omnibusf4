@@ -1,5 +1,5 @@
 /************************************************************************************
- * configs/stm32f4discovery/src/stm32_spi.c
+ * configs/omnibusf4/src/stm32_spi.c
  *
  *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -51,7 +51,7 @@
 #include "chip.h"
 #include "stm32.h"
 
-#include "stm32f4discovery.h"
+#include "omnibusf4.h"
 
 #if defined(CONFIG_STM32_SPI1) || defined(CONFIG_STM32_SPI2) || defined(CONFIG_STM32_SPI3)
 
@@ -63,7 +63,7 @@
  * Name: stm32_spidev_initialize
  *
  * Description:
- *   Called to configure SPI chip select GPIO pins for the stm32f4discovery board.
+ *   Called to configure SPI chip select GPIO pins for the omnibusf4 board.
  *
  ************************************************************************************/
 

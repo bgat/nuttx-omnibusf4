@@ -1,5 +1,5 @@
 /************************************************************************************
- * config/stm32f4discovery/src/stm32_netinit.c
+ * config/omnibusf4/src/stm32_netinit.c
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
