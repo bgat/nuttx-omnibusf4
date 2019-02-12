@@ -70,42 +70,28 @@
 
 int stm32_pwm_setup(void)
 {
-	aerr("ERROR: PWM setup not yet implemented!\n");
-	
-#ifdef HAVE_PWM
-  static bool initialized = false;
-  struct pwm_lowerhalf_s *pwm;
-  int ret;
+	static bool initialized = false;
 
-  /* Have we already initialized? */
+	if (initialized)
+		return 0; /* don't re-initialize */
 
-  if (!initialized)
-    {
-      /* Call stm32_pwminitialize() to get an instance of the PWM interface */
+	/* omnibusf4 uses TIM2 and TIM3 for motor outputs */
+	for (int npwm = 2; npwm <= 3; npwm++)
+	{
+		struct pwm_lowerhalf_s *pwm = stm32_pwminitialize(npwm);
+		if (!pwm)
+			continue; /* can't get the lower-half driver handle */
 
-      pwm = stm32_pwminitialize(STM32F4DISCOVERY_PWMTIMER);
-      if (!pwm)
-        {
-          aerr("ERROR: Failed to get the STM32 PWM lower half\n");
-          return -ENODEV;
-        }
+		/* translate the peripheral number to a device name */
+		const char* ppwm = (void*)0;
+		switch (npwm) {
+		case 2: ppwm = "/dev/pwm2"; break;
+		case 3: ppwm = "/dev/pwm3"; break;
+		default: continue; /* skip missing names */
+		}
+		pwm_register(ppwm, pwm);
+	}
 
-      /* Register the PWM driver at "/dev/pwm0" */
-
-      ret = pwm_register("/dev/pwm0", pwm);
-      if (ret < 0)
-        {
-          aerr("ERROR: pwm_register failed: %d\n", ret);
-          return ret;
-        }
-
-      /* Now we are initialized */
-
-      initialized = true;
-    }
-
-  return OK;
-#else
-  return -ENODEV;
-#endif
+	initialized = true;
+	return 0;
 }

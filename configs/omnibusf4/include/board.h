@@ -292,8 +292,7 @@
 #define GPIO_USART6_RX    GPIO_USART6_RX_1     /* PC7 (also I2S3_MCK and P2 pin 48) */
 #define GPIO_USART6_TX    GPIO_USART6_TX_1     /* PC6 (also P2 pin 47) */
 
-/* PWM - motor outputs, etc. are on these pins:
- */
+/* PWM - motor outputs, etc. are on these pins: */
 
 #define GPIO_TIM3_CH3OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN0) /* S1_OUT */
 #define GPIO_TIM3_CH4OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN1) /* S2_OUT */
