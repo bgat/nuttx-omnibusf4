@@ -1,7 +1,9 @@
 /****************************************************************************
- * configs/stm32f4discovery/kernel/stm32_userspace.c
+ * configs/omnibusf4/kernel/stm32_userspace.c
  *
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2013, 2015 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
