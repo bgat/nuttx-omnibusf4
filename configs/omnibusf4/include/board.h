@@ -49,15 +49,14 @@
 #  include <stdbool.h>
 #endif
 
-/* TODO: convert from STM32F4 Discovery */
 
 /************************************************************************************
  * Pre-processor Definitions
  ************************************************************************************/
 
 /* Clocking *************************************************************************/
-/* The STM32F4 Discovery board features a single 8MHz crystal.  Space is provided
- * for a 32kHz RTC backup crystal, but it is not stuffed.
+
+/* TODO: The OMNIBUSF4 board family use a single 8MHz crystal.
  *
  * This is the canonical configuration:
  *   System Clock source           : PLL (HSE)
@@ -194,166 +193,113 @@
 #endif
 
 /* LED definitions ******************************************************************/
-/* If CONFIG_ARCH_LEDS is not defined, then the user can control the LEDs in any
- * way.  The following definitions are used to access individual LEDs.
+
+#define BOARD_LED1        0 /* TODO: PB5 */
+#define BOARD_BEEPER1     0 /* TODO: PB4 */
+
+
+/* Pin configurations **************************************************************/
+
+
+
+/* USART1:
+ *
+ * DYS F4 Pro, Omnibus F4 AIO 1st Gen have an inverter on PC0.
  */
-
-/* LED index values for use with board_userled() */
-
-#define BOARD_LED1        0
-#define BOARD_LED2        1
-#define BOARD_LED3        2
-#define BOARD_LED4        3
-#define BOARD_NLEDS       4
-
-#define BOARD_LED_GREEN   BOARD_LED1
-#define BOARD_LED_ORANGE  BOARD_LED2
-#define BOARD_LED_RED     BOARD_LED3
-#define BOARD_LED_BLUE    BOARD_LED4
-
-/* LED bits for use with board_userled_all() */
-
-#define BOARD_LED1_BIT    (1 << BOARD_LED1)
-#define BOARD_LED2_BIT    (1 << BOARD_LED2)
-#define BOARD_LED3_BIT    (1 << BOARD_LED3)
-#define BOARD_LED4_BIT    (1 << BOARD_LED4)
-
-/* If CONFIG_ARCH_LEDs is defined, then NuttX will control the 4 LEDs on board the
- * stm32f4discovery.  The following definitions describe how NuttX controls the LEDs:
- */
-
-#define LED_STARTED       0  /* LED1 */
-#define LED_HEAPALLOCATE  1  /* LED2 */
-#define LED_IRQSENABLED   2  /* LED1 + LED2 */
-#define LED_STACKCREATED  3  /* LED3 */
-#define LED_INIRQ         4  /* LED1 + LED3 */
-#define LED_SIGNAL        5  /* LED2 + LED3 */
-#define LED_ASSERTION     6  /* LED1 + LED2 + LED3 */
-#define LED_PANIC         7  /* N/C  + N/C  + N/C + LED4 */
-
-/* Alternate function pin selections ************************************************/
-/* CAN */
-
-#ifndef CONFIG_STM32_FSMC
-#  define GPIO_CAN1_RX GPIO_CAN1_RX_3
-#  define GPIO_CAN1_TX GPIO_CAN1_TX_3
-#endif
-
-#ifndef CONFIG_STM32_ETHMAC
-#  define GPIO_CAN2_RX GPIO_CAN2_RX_1
-#  define GPIO_CAN2_TX GPIO_CAN2_TX_1
-#endif
+/* #define INVERTER_PIN_USART1 PC0 */
+#define GPIO_USART1_RX  GPIO_USART1_RX_1     /* PA10 */
+#define GPIO_USART1_TX  GPIO_USART1_TX_1     /* PA9  */
 
 /* USART2:
  *
- * The STM32F4 Discovery has no on-board serial devices, but the console is
- * brought out to PA2 (TX) and PA3 (RX) for connection to an external serial
- * device. (See the README.txt file for other options)
- *
- * These pins selections, however, conflict with pin usage on the STM32F4DIS-BB.
+ * TODO: Do OMNIBUSF4 targets use USART2?
  */
-
-#ifndef CONFIG_STM32F4DISBB
-#  define GPIO_USART2_RX  GPIO_USART2_RX_1     /* PA3, P1 pin 13 */
-#  define GPIO_USART2_TX  GPIO_USART2_TX_1     /* PA2, P1 pin 14 */
-#  define GPIO_USART2_CTS GPIO_USART2_CTS_1    /* PA0, P1 pin 11 */
-#  define GPIO_USART2_RTS GPIO_USART2_RTS_1    /* PA1, P1 pin 12 (conflict with USER button) */
-#endif
 
 /* USART3:
  *
- * Used in pseudoterm configuration and also with the BT860 HCI UART.
- * RTS/CTS Flow control support is needed by the HCI UART.
- *
- * There are conflicts with the STM32F4DIS-BB Ethernet in this configuration
- * when Ethernet is enabled:
- *
- *   PB-11 conflicts with Ethernet TXEN
- *   PB-13 conflicts with Ethernet TXD1
- *
- * UART3 TXD and RXD are available on CON4 PD8 and PD8 of the STM32F4DIS-BB,
- * respectively, but not CTS or RTS.  For now we assume that Ethernet is not
- * enabled if USART3 is used in a configuration with the STM32F4DIS-BB.
  */
 
-#define GPIO_USART3_TX    GPIO_USART3_TX_1     /* PB10, P1 pin 34 (also MP45DT02 CLK_IN) */
-#define GPIO_USART3_RX    GPIO_USART3_RX_1     /* PB11, P1 pin 35 */
-#define GPIO_USART3_CTS   GPIO_USART3_CTS_1    /* PB13, P1 pin 37 */
-#define GPIO_USART3_RTS   GPIO_USART3_RTS_1    /* PB14, P1 pin 38 */
+#define GPIO_USART3_TX    GPIO_USART3_TX_1     /* PB10 */
+#define GPIO_USART3_RX    GPIO_USART3_RX_1     /* PB11 */
+
+/* USART4:
+ *
+ */
 
 /* USART6:
  *
- * The STM32F4DIS-BB base board provides RS-232 drivers and a DB9 connector
- * for USART6.  This is the preferred serial console for use with the STM32F4DIS-BB.
- *
- * NOTE: CTS and RTS are not brought out to the RS-232 connector on the baseboard.
+ * Omnibus F4 V3 and later, and all EXUAVF4PRO targets, have inverters on PC8.
  */
+/* #define INVERTER_PIN_UART6      PC8 */
 
-#define GPIO_USART6_RX    GPIO_USART6_RX_1     /* PC7 (also I2S3_MCK and P2 pin 48) */
-#define GPIO_USART6_TX    GPIO_USART6_TX_1     /* PC6 (also P2 pin 47) */
+#define GPIO_USART6_RX    GPIO_USART6_RX_1     /* PC7 */
+#define GPIO_USART6_TX    GPIO_USART6_TX_1     /* PC6 */
 
 /* PWM - motor outputs, etc. are on these pins: */
 
-#define GPIO_TIM3_CH3OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN0) /* S1_OUT */
-#define GPIO_TIM3_CH4OUT  (GPIO_ALT | GPIO_AF2 | GPIO_PORTB | GPIO_PIN1) /* S2_OUT */
-#define GPIO_TIM2_CH4OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN3) /* S3_OUT */
-#define GPIO_TIM2_CH3OUT  (GPIO_ALT | GPIO_AF1 | GPIO_PORTA | GPIO_PIN2) /* S4_OUT */
+#define GPIO_TIM3_CH3OUT  GPIO_TIM3_CH3OUT_1   /* S1_OUT  PB0 */
+#define GPIO_TIM3_CH4OUT  GPIO_TIM3_CH4OUT_1   /* S2_OUT  PB1 */
+#define GPIO_TIM2_CH4OUT  GPIO_TIM2_CH4OUT_1   /* S3_OUT  PA3 */
+#define GPIO_TIM2_CH3OUT  GPIO_TIM3_CH3OUT_1   /* S4_OUT  PA2 */
 
-/* SPI - There is a MEMS device on SPI1 using these pins: */
-
-#define GPIO_SPI1_MISO    GPIO_SPI1_MISO_1
-#define GPIO_SPI1_MOSI    GPIO_SPI1_MOSI_1
-#define GPIO_SPI1_SCK     GPIO_SPI1_SCK_1
-
-/* SPI DMA -- As used for I2S DMA transfer with the audio configuration */
-
-#define DMACHAN_SPI1_RX   DMAMAP_SPI1_RX_1
-#define DMACHAN_SPI1_TX   DMAMAP_SPI1_TX_1
-
-/* SPI2 - Test MAX31855 on SPI2 PB10 = SCK, PB14 = MISO */
-
-#define GPIO_SPI2_MISO    GPIO_SPI2_MISO_1
-#define GPIO_SPI2_MOSI    GPIO_SPI2_MOSI_1
-#define GPIO_SPI2_SCK     GPIO_SPI2_SCK_1
-
-/* SPI3 DMA -- As used for I2S DMA transfer with the audio configuration */
-
-#define GPIO_SPI3_MISO    GPIO_SPI3_MISO_1
-#define GPIO_SPI3_MOSI    GPIO_SPI3_MOSI_1
-#define GPIO_SPI3_SCK     GPIO_SPI3_SCK_1
-
-#define DMACHAN_SPI3_RX   DMAMAP_SPI3_RX_1
-#define DMACHAN_SPI3_TX   DMAMAP_SPI3_TX_1
-
-/* I2S3 - CS43L22 configuration uses I2S3 */
-
-#define GPIO_I2S3_SD      GPIO_I2S3_SD_2
-#define GPIO_I2S3_CK      GPIO_I2S3_CK_2
-#define GPIO_I2S3_WS      GPIO_I2S3_WS_1
-
-#define DMACHAN_I2S3_RX   DMAMAP_SPI3_RX_2
-#define DMACHAN_I2S3_TX   DMAMAP_SPI3_TX_2
-
-/* I2C.  Only I2C1 is available on the stm32f4discovery.  I2C1_SCL and I2C1_SDA are
- * available on the following pins:
+/* SPI1 :
  *
- * - PB6  is I2C1_SCL
- * - PB9  is I2C1_SDA
+ * MPU6000 6-axis motion sensor (accelerometer + gyroscope), or
+ * MPU6500 6-Axis MEMS MotionTracking Device with DMP
+ *
+ * // MPU6000 interrupts                                                                               *              
+ * #define USE_GYRO_EXTI
+ * #define GYRO_1_EXTI_PIN         PC4
+ * #define USE_MPU_DATA_READY_SIGNAL
+ *
+ * #define GYRO_1_ALIGN            CW270_DEG
+ * #define ACC_1_ALIGN             CW270_DEG
  */
 
+#define GPIO_SPI1_MISO    GPIO_SPI1_MISO_1  /* PA6 */
+#define GPIO_SPI1_MOSI    GPIO_SPI1_MOSI_1  /* PA7 */
+#define GPIO_SPI1_SCK     GPIO_SPI1_SCK_1   /* PA5 */
+#define GPIO_SPI1_NSS     GPIO_SPI1_NSS_2   /* PA4 */
+#define DMACHAN_SPI1_RX   DMAMAP_SPI1_RX_1  /* 2:0:3 */
+#define DMACHAN_SPI1_TX   DMAMAP_SPI1_TX_1  /* 2:3:3 */
+
+/* SPI2 :
+ *
+ * Used for SD on OMNIBUSF4SD and LUXF4OSD targets.
+ *
+ * TODO: can we use the SDIO controller instead?
+ */
+
+#define GPIO_SPI2_MISO    GPIO_SPI2_MISO_1  /* PB14 */
+#define GPIO_SPI2_MOSI    GPIO_SPI2_MOSI_1  /* PB15 */
+#define GPIO_SPI2_NSS     GPIO_SPI2_NSS_1   /* PB12 */
+#define GPIO_SPI2_SCK     GPIO_SPI2_SCK_2   /* PB13 */
+#define DMACHAN_SPI2_RX   DMAMAP_SPI2_RX    /* 1:3:0 */
+#define DMACHAN_SPI2_TX   DMAMAP_SPI2_TX    /* 1:4:0 */
+
+
+/* SPI3 :
+ *
+ * OMNIBUSF4SD targets use PA15 for NSS; others use PB4 (? BF code says "PB3").
+ * define GPIO_SPI3_NSS     GPIO_SPI3_NSS_2   PB4
+ *
+ * Barometer and/or MAX7456, depending on the target.
+ * (OMNIBUSF4BASE targets appear to have a cyrf6936 device.)
+*/
+#define GPIO_SPI3_MISO    GPIO_SPI3_MISO_2  /* PC11 */
+#define GPIO_SPI3_MOSI    GPIO_SPI3_MOSI_2  /* PC12 */
+#define GPIO_SPI3_NSS     GPIO_SPI3_NSS_1   /* PA15 */
+#define GPIO_SPI3_SCK     GPIO_SPI3_SCK_2   /* PC10 */
+
+
+
+
+#if 0
+/* I2C :
+ */
 #define GPIO_I2C1_SCL     GPIO_I2C1_SCL_1
 #define GPIO_I2C1_SDA     GPIO_I2C1_SDA_2
+#endif
 
-
-/* DMA Channl/Stream Selections *****************************************************/
-/* Stream selections are arbitrary for now but might become important in the future
- * if we set aside more DMA channels/streams.
- *
- * SDIO DMA
- *   DMAMAP_SDIO_1 = Channel 4, Stream 3
- *   DMAMAP_SDIO_2 = Channel 4, Stream 6
- */
-
-#define DMAMAP_SDIO DMAMAP_SDIO_1
 
 #endif  /* __CONFIG_OMNIBUSF4_INCLUDE_BOARD_H */

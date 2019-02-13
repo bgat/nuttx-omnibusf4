@@ -1,7 +1,9 @@
 /************************************************************************************
  * configs/omnibusf4/src/stm32_usb.c
  *
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2012-2013, 2015, 2017 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,12 +72,12 @@
 #  undef HAVE_USB
 #endif
 
-#ifndef CONFIG_STM32F4DISCO_USBHOST_PRIO
-#  define CONFIG_STM32F4DISCO_USBHOST_PRIO 100
+#ifndef CONFIG_OMNIBUSF4_USBHOST_PRIO
+#  define CONFIG_OMNIBUSF4_USBHOST_PRIO 100
 #endif
 
-#ifndef CONFIG_STM32F4DISCO_USBHOST_STACKSIZE
-#  define CONFIG_STM32F4DISCO_USBHOST_STACKSIZE 1024
+#ifndef CONFIG_OMNIBUSF4_USBHOST_STACKSIZE
+#  define CONFIG_OMNIBUSF4_USBHOST_STACKSIZE 1024
 #endif
 
 /************************************************************************************
@@ -136,7 +138,7 @@ static int usbhost_waiter(int argc, char *argv[])
  *
  * Description:
  *   Called from stm32_usbinitialize very early in inialization to setup USB-related
- *   GPIO pins for the STM32F4Discovery board.
+ *   GPIO pins for the Omnibusf4 board.
  *
  ************************************************************************************/
 
@@ -148,8 +150,6 @@ void stm32_usbinitialize(void)
 
 #ifdef CONFIG_STM32_OTGFS
   stm32_configgpio(GPIO_OTGFS_VBUS);
-  stm32_configgpio(GPIO_OTGFS_PWRON);
-  stm32_configgpio(GPIO_OTGFS_OVER);
 #endif
 }
 
@@ -249,8 +249,8 @@ int stm32_usbhost_initialize(void)
 
       uinfo("Start usbhost_waiter\n");
 
-      pid = kthread_create("usbhost", CONFIG_STM32F4DISCO_USBHOST_PRIO,
-                        CONFIG_STM32F4DISCO_USBHOST_STACKSIZE,
+      pid = kthread_create("usbhost", CONFIG_OMNIBUSF4_USBHOST_PRIO,
+                        CONFIG_OMNIBUSF4_USBHOST_STACKSIZE,
                         (main_t)usbhost_waiter, (FAR char * const *)NULL);
       return pid < 0 ? -ENOEXEC : OK;
     }

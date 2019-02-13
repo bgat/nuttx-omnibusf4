@@ -67,41 +67,6 @@
 #  undef CONFIG_STM32_SPI3
 #endif
 
-/* Assume that we have everything */
-
-#define HAVE_USBDEV     1
-#define HAVE_USBHOST    1
-#define HAVE_USBMONITOR 1
-#define HAVE_SDIO       1
-#define HAVE_RTC_DRIVER 1
-#define HAVE_HCIUART    1
-
-/* Can't support USB host or device features if USB OTG FS is not enabled */
-
-#ifndef CONFIG_STM32_OTGFS
-#  undef HAVE_USBDEV
-#  undef HAVE_USBHOST
-#  undef HAVE_USBMONITOR
-#endif
-
-/* Can't support USB device monitor if USB device is not enabled */
-
-#ifndef CONFIG_USBDEV
-#  undef HAVE_USBDEV
-#  undef HAVE_USBMONITOR
-#endif
-
-/* Can't support USB host is USB host is not enabled */
-
-#ifndef CONFIG_USBHOST
-#  undef HAVE_USBHOST
-#endif
-
-/* Check if we should enable the USB monitor before starting NSH */
-
-#if !defined(CONFIG_USBDEV_TRACE) || !defined(CONFIG_USBMONITOR)
-#  undef HAVE_USBMONITOR
-#endif
 
 /* Can't support MMC/SD features if mountpoints are disabled or if SDIO support
  * is not enabled.
@@ -143,11 +108,6 @@
 #  endif
 #endif
 
-/* Check if we can support the RTC driver */
-
-#if !defined(CONFIG_RTC) || !defined(CONFIG_RTC_DRIVER)
-#  undef HAVE_RTC_DRIVER
-#endif
 
 /* procfs File System */
 
@@ -179,14 +139,16 @@
 #  error No HCI UART specifified
 #endif
 
-/* TODO: OMNIBUSF4 GPIOs **************************************************/
+/* OMNIBUSF4 GPIOs **************************************************/
 
 #define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                         GPIO_OUTPUT_CLEAR|GPIO_PORTD|GPIO_PIN12)
+                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
+#define GPIO_BEEPER1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
+                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN4)
 
 
 /* TODO: SPI chip selects */
-
+#if 0
 #define GPIO_CS_MEMS      (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
                            GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
 
@@ -198,28 +160,16 @@
 
 #define GPIO_MAX7219_CS   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
                            GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN3)
+#endif
 
-
-/* TODO: USB OTG FS
+/* USB OTG FS:
  *
- * PA9  OTG_FS_VBUS VBUS sensing (also connected to the green LED)
- * PC0  OTG_FS_PowerSwitchOn
- * PD5  OTG_FS_Overcurrent
+ * PC5  OTG_FS_VBUS VBUS sensing
  */
 
 #define GPIO_OTGFS_VBUS   (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|\
-                           GPIO_OPENDRAIN|GPIO_PORTA|GPIO_PIN9)
-#define GPIO_OTGFS_PWRON  (GPIO_OUTPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|\
-                           GPIO_PUSHPULL|GPIO_PORTC|GPIO_PIN0)
+                           GPIO_OPENDRAIN|GPIO_PORTC|GPIO_PIN5)
 
-#ifdef CONFIG_USBHOST
-#  define GPIO_OTGFS_OVER (GPIO_INPUT|GPIO_EXTI|GPIO_FLOAT|\
-                           GPIO_SPEED_100MHz|GPIO_PUSHPULL|\
-                           GPIO_PORTD|GPIO_PIN5)
-#else
-#  define GPIO_OTGFS_OVER (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|\
-                           GPIO_PUSHPULL|GPIO_PORTD|GPIO_PIN5)
-#endif
 
 
 /* TODO: MicroSD (not available on all OMNIBUSF4's)
