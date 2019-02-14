@@ -39,20 +39,10 @@
 -include $(TOPDIR)/Make.defs
 
 ASRCS =
-CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c
-
-ifeq ($(CONFIG_ARCH_LEDS),y)
-CSRCS += stm32_autoleds.c
-else
-CSRCS += stm32_userleds.c
-endif
+CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c stm32_userleds.c
 
 ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
 CSRCS += stm32_critmon.c
-endif
-
-ifeq ($(CONFIG_ARCH_BUTTONS),y)
-CSRCS +=  stm32_buttons.c
 endif
 
 ifeq ($(CONFIG_CAN),y)
@@ -61,10 +51,6 @@ endif
 
 ifeq ($(CONFIG_STM32_OTGFS),y)
 CSRCS += stm32_usb.c
-endif
-
-ifeq ($(CONFIG_STM32_SDIO),y)
-CSRCS += stm32_sdio.c
 endif
 
 ifeq ($(CONFIG_NETDEVICES),y)
@@ -107,12 +93,6 @@ ifeq ($(CONFIG_TIMER),y)
 CSRCS += stm32_timer.c
 endif
 
-ifeq ($(CONFIG_STM32_HCIUART),y)
-ifeq ($(CONFIG_BLUETOOTH_UART),y)
-CSRCS += stm32_hciuart.c
-endif
-endif
-
 ifeq ($(CONFIG_STM32_ROMFS),y)
 CSRCS += stm32_romfs_initialize.c
 endif
@@ -123,6 +103,10 @@ endif
 
 ifeq ($(CONFIG_USBMSC),y)
 CSRCS += stm32_usbmsc.c
+endif
+
+ifeq ($(CONFIG_MMCSD),y)
+CSRCS += stm32_mmcsd.c
 endif
 
 include $(TOPDIR)/configs/Board.mk

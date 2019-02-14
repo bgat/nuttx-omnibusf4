@@ -56,7 +56,7 @@
 
 /* Clocking *************************************************************************/
 
-/* TODO: The OMNIBUSF4 board family use a single 8MHz crystal.
+/* The OMNIBUSF4 board uses a single 8MHz crystal.
  *
  * This is the canonical configuration:
  *   System Clock source           : PLL (HSE)
@@ -192,7 +192,9 @@
 #  define SDIO_SDXFR_CLKDIV     (2 << SDIO_CLKCR_CLKDIV_SHIFT)
 #endif
 
-/* LED definitions ******************************************************************/
+
+/* Pin configurations **************************************************************/
+
 
 #define BOARD_NLEDS     2
 #define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
@@ -200,16 +202,10 @@
 #define GPIO_BEEPER1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
                          GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN4)
 
-
-/* Pin configurations **************************************************************/
-
-
-
 /* USART1:
  *
- * DYS F4 Pro, Omnibus F4 AIO 1st Gen have an inverter on PC0.
  */
-/* #define INVERTER_PIN_USART1 PC0 */
+/* #define INVERTER_PIN_USART1     PC0    DYS F4 Pro, Omnibus F4 AIO 1st Gen only */
 #define GPIO_USART1_RX  GPIO_USART1_RX_1     /* PA10 */
 #define GPIO_USART1_TX  GPIO_USART1_TX_1     /* PA9  */
 
@@ -231,10 +227,9 @@
 
 /* USART6:
  *
- * Omnibus F4 V3 and later, and all EXUAVF4PRO targets, have inverters on PC8.
+ * 
  */
-/* #define INVERTER_PIN_UART6      PC8 */
-
+/* #define INVERTER_PIN_UART6      PC8     Omnibus F4 V3 and later, EXUAVF4PRO */
 #define GPIO_USART6_RX    GPIO_USART6_RX_1     /* PC7 */
 #define GPIO_USART6_TX    GPIO_USART6_TX_1     /* PC6 */
 
@@ -268,9 +263,8 @@
 
 /* SPI2 :
  *
- * Used for SD on OMNIBUSF4SD and LUXF4OSD targets.
+ * Used for MMC/SD on OMNIBUSF4SD.
  *
- * TODO: can we use the SDIO controller instead?
  */
 
 #define GPIO_SPI2_MISO    GPIO_SPI2_MISO_1  /* PB14 */
@@ -279,6 +273,9 @@
 #define GPIO_SPI2_SCK     GPIO_SPI2_SCK_2   /* PB13 */
 #define DMACHAN_SPI2_RX   DMAMAP_SPI2_RX    /* 1:3:0 */
 #define DMACHAN_SPI2_TX   DMAMAP_SPI2_TX    /* 1:4:0 */
+
+#define GPIO_MMCSD_NSS    GPIO_SPI2_NSS
+#define GPIO_MMCSD_NCD    (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN7) /* PB7 SD_DET */
 
 
 /* SPI3 :

@@ -55,47 +55,6 @@
 /* Configuration ************************************************************/
 
 
-/* Can't support MMC/SD features if mountpoints are disabled or if SDIO support
- * is not enabled.
- */
-
-#if defined(CONFIG_DISABLE_MOUNTPOINT) || !defined(CONFIG_STM32_SDIO)
-#  undef HAVE_SDIO
-#endif
-
-#undef  SDIO_MINOR     /* Any minor number, default 0 */
-#define SDIO_SLOTNO 0  /* Only one slot */
-
-#ifdef HAVE_SDIO
-
-#  if !defined(CONFIG_NSH_MMCSDSLOTNO)
-#    define CONFIG_NSH_MMCSDSLOTNO SDIO_SLOTNO
-#  elif CONFIG_NSH_MMCSDSLOTNO != 0
-#    warning "Only one MMC/SD slot, slot 0"
-#    undef CONFIG_NSH_MMCSDSLOTNO
-#    define CONFIG_NSH_MMCSDSLOTNO SDIO_SLOTNO
-#  endif
-
-#  if defined(CONFIG_NSH_MMCSDMINOR)
-#    define SDIO_MINOR CONFIG_NSH_MMCSDMINOR
-#  else
-#    define SDIO_MINOR 0
-#  endif
-
-  /* SD card bringup does not work if performed on the IDLE thread because it
-   * will cause waiting.  Use either:
-   *
-   *  CONFIG_LIB_BOARDCTL=y, OR
-   *  CONFIG_BOARD_INITIALIZE=y && CONFIG_BOARD_INITTHREAD=y
-   */
-
-#  if defined(CONFIG_BOARD_INITIALIZE) && !defined(CONFIG_BOARD_INITTHREAD)
-#    warning "SDIO initialization cannot be perfomed on the IDLE thread"
-#    undef HAVE_SDIO
-#  endif
-#endif
-
-
 /* procfs File System */
 
 #ifdef CONFIG_FS_PROCFS
@@ -106,32 +65,16 @@
 #  endif
 #endif
 
-/* Check if we have the prequisites for an HCI UART */
-
-#if !defined(CONFIG_STM32_HCIUART) || !defined(CONFIG_BLUETOOTH_UART)
-#  undef HAVE_HCIUART
-#elif defined(CONFIG_STM32_USART1_HCIUART)
-#  define HCIUART_SERDEV HCIUART1
-#elif defined(CONFIG_STM32_USART2_HCIUART)
-#  define HCIUART_SERDEV HCIUART2
-#elif defined(CONFIG_STM32_USART3_HCIUART)
-#  define HCIUART_SERDEV HCIUART3
-#elif defined(CONFIG_STM32_USART6_HCIUART)
-#  define HCIUART_SERDEV HCIUART6
-#elif defined(CONFIG_STM32_UART7_HCIUART)
-#  define HCIUART_SERDEV HCIUART7
-#elif defined(CONFIG_STM32_UART8_HCIUART)
-#  define HCIUART_SERDEV HCIUART8
-#else
-#  error No HCI UART specifified
-#endif
 
 /* OMNIBUSF4 GPIOs **************************************************/
 
 
 /* TODO: SPI chip selects */
 #if 0
-#define GPIO_CS_MEMS      (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
+
+/* MPU6000: SPI1, SPI1_NSS (PA4); INT PC4 */
+
+#define GPIO_CS_MEMS      (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|	\
                            GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
 
 #define GPIO_MAX31855_CS  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
@@ -152,27 +95,6 @@
 #define GPIO_OTGFS_VBUS   (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_100MHz|\
                            GPIO_OPENDRAIN|GPIO_PORTC|GPIO_PIN5)
 
-
-
-/* TODO: MicroSD (not available on all OMNIBUSF4's)
- *
- * ---------- ------------- ------------------------------
- * PIO        SIGNAL        Comments
- * ---------- ------------- ------------------------------
- * PB15       NCD           Pulled up externally
- * PC9        DAT1          Configured by driver
- * PC8        DAT0          "        " "" "    "
- * PC12       CLK           "        " "" "    "
- * PD2        CMD           "        " "" "    "
- * PC11       CD/DAT3       "        " "" "    "
- * PC10       DAT2          "        " "" "    "
- * ---------- ------------- ------------------------------
- */
-
-#if defined(CONFIG_STM32F4DISBB) && defined(CONFIG_STM32_SDIO)
-#  define GPIO_SDIO_NCD   (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|\
-                           GPIO_PORTB|GPIO_PIN15)
-#endif
 
 
 /****************************************************************************
@@ -216,49 +138,24 @@ int stm32_bringup(void);
 
 void weak_function stm32_spidev_initialize(void);
 
- /****************************************************************************
-  * Name: stm32_i2sdev_initialize
-  *
-  * Description:
-  *   Called to configure I2S chip select GPIO pins for the omnibusf4
-  *   board.
-  *
-  ****************************************************************************/
-
-FAR struct i2s_dev_s *stm32_i2sdev_initialize(int port);
 
 /****************************************************************************
- * Name: stm32_bh1750initialize
+ * Name: stm32_mmcsdinitialize
  *
  * Description:
- *   Called to configure an I2C and to register BH1750FVI for the
- *   omnibusf4 board.
+ *   Sets up MMC/SD interface.
  *
  ****************************************************************************/
 
-#ifdef CONFIG_SENSORS_BH1750FVI
-int stm32_bh1750initialize(FAR const char *devpath);
-#endif
+int weak_function stm32_mmcsd_initialize(int port, int minor);
 
-/****************************************************************************
- * Name: stm32_bmp180initialize
- *
- * Description:
- *   Called to configure an I2C and to register BMP180 for the
- *   omnibusf4 board.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_SENSORS_BMP180
-int stm32_bmp180initialize(FAR const char *devpath);
-#endif
 
 /****************************************************************************
  * Name: stm32_usbinitialize
  *
  * Description:
  *   Called from stm32_usbinitialize very early in initialization to setup
- *   USB-related GPIO pins for the STM32F4Discovery board.
+ *   USB-related GPIO pins for the OMNIBUSF4 board.
  *
  ****************************************************************************/
 
@@ -289,7 +186,7 @@ int stm32_usbhost_initialize(void);
  ****************************************************************************/
 
 #ifdef CONFIG_PWM
-int stm32_pwm_setup(void);
+int weak_function stm32_pwm_setup(void);
 #endif
 
 /****************************************************************************
@@ -364,17 +261,6 @@ void stm32_enablefsmc(void);
 void stm32_disablefsmc(void);
 #endif
 
-/****************************************************************************
- * Name: stm32_sdio_initialize
- *
- * Description:
- *   Initialize SDIO-based MMC/SD card support
- *
- ****************************************************************************/
-
-#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_STM32_SDIO)
-int stm32_sdio_initialize(void);
-#endif
 
 /****************************************************************************
  * Name: stm32_timer_driver_setup
@@ -397,25 +283,6 @@ int stm32_sdio_initialize(void);
 int stm32_timer_driver_setup(FAR const char *devpath, int timer);
 #endif
 
-/****************************************************************************
- * Name: hciuart_dev_initialize
- *
- * Description:
- *   This function is called by board initialization logic to configure the
- *   Bluetooth HCI UART driver
- *
- * Input Parameters:
- *   None
- *
- * Returned Value:
- *   Zero is returned on success.  Otherwise, a negated errno value is
- *   returned to indicate the nature of the failure.
- *
- ****************************************************************************/
-
-#ifdef HAVE_HCIUART
-int hciuart_dev_initialize(void);
-#endif
 
 #endif /* __ASSEMBLY__ */
 #endif /* __CONFIGS_OMNIBUSF4_SRC_OMNIBUSF4_H */

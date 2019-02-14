@@ -1,7 +1,9 @@
 /************************************************************************************
  * configs/omnibusf4/src/stm32_spi.c
  *
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,27 +74,9 @@ void weak_function stm32_spidev_initialize(void)
 #ifdef CONFIG_STM32_SPI1
   (void)stm32_configgpio(GPIO_CS_MEMS);    /* MEMS chip select */
 #endif
-#if defined(CONFIG_STM32_SPI2) && defined(CONFIG_SENSORS_MAX31855)
-  (void)stm32_configgpio(GPIO_MAX31855_CS); /* MAX31855 chip select */
-#endif
-#if defined(CONFIG_LCD_MAX7219) || defined(CONFIG_LEDS_MAX7219)
-  (void)stm32_configgpio(GPIO_MAX7219_CS);  /* MAX7219 chip select */
-#endif
-#if defined(CONFIG_LCD_ST7567)
-  (void)stm32_configgpio(STM32_LCD_CS);     /* ST7567 chip select */
-#endif
-#if defined(CONFIG_STM32_SPI2) && defined(CONFIG_SENSORS_MAX6675)
-  (void)stm32_configgpio(GPIO_MAX6675_CS); /* MAX6675 chip select */
-#endif
-#if defined(CONFIG_LCD_UG2864AMBAG01) || defined(CONFIG_LCD_UG2864HSWEG01) || \
-    defined(CONFIG_LCD_SSD1351)
-  (void)stm32_configgpio(GPIO_OLED_CS);    /* OLED chip select */
-# if defined(CONFIG_LCD_UG2864AMBAG01)
-  (void)stm32_configgpio(GPIO_OLED_A0);    /* OLED Command/Data */
-# endif
-# if defined(CONFIG_LCD_UG2864HSWEG01) || defined(CONFIG_LCD_SSD1351)
-  (void)stm32_configgpio(GPIO_OLED_DC);    /* OLED Command/Data */
-# endif
+#if defined(CONFIG_MMCSD_SPI)
+  (void)stm32_configgpio(GPIO_MMCSD_NCD);  /* SD_DET */
+  (void)stm32_configgpio(GPIO_MMCSD_NSS);  /* CS */
 #endif
 }
 
@@ -160,20 +144,9 @@ uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, uint32_t devid)
 #ifdef CONFIG_STM32_SPI2
 void stm32_spi2select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
-
-#if defined(CONFIG_SENSORS_MAX31855)
-  if (devid == SPIDEV_TEMPERATURE(0))
-    {
-      stm32_gpiowrite(GPIO_MAX31855_CS, !selected);
-    }
-#endif
-#if defined(CONFIG_SENSORS_MAX6675)
-  if (devid == SPIDEV_TEMPERATURE(0))
-    {
-      stm32_gpiowrite(GPIO_MAX6675_CS, !selected);
-    }
-#endif
+	spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+	/* TODO: do we need this if we're using NSS? */
+	/* stm32_gpiowrite(GPIO_MAX6675_CS, !selected); */
 }
 
 uint8_t stm32_spi2status(FAR struct spi_dev_s *dev, uint32_t devid)
