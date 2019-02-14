@@ -54,19 +54,6 @@
 
 /* Configuration ************************************************************/
 
-/* How many SPI modules does this chip support? */
-
-#if STM32_NSPI < 1
-#  undef CONFIG_STM32_SPI1
-#  undef CONFIG_STM32_SPI2
-#  undef CONFIG_STM32_SPI3
-#elif STM32_NSPI < 2
-#  undef CONFIG_STM32_SPI2
-#  undef CONFIG_STM32_SPI3
-#elif STM32_NSPI < 3
-#  undef CONFIG_STM32_SPI3
-#endif
-
 
 /* Can't support MMC/SD features if mountpoints are disabled or if SDIO support
  * is not enabled.
@@ -140,11 +127,6 @@
 #endif
 
 /* OMNIBUSF4 GPIOs **************************************************/
-
-#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
-#define GPIO_BEEPER1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN4)
 
 
 /* TODO: SPI chip selects */

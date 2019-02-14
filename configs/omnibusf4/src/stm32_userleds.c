@@ -1,7 +1,9 @@
 /****************************************************************************
  * configs/omnibusf4/src/stm32_userleds.c
  *
+ *   Copyright (C) 2019 Bill Gatliff. All rights reserved.
  *   Copyright (C) 2011, 2015-2016 Gregory Nutt. All rights reserved.
+ *   Author: Bill Gatliff <bgat@billgatliff.com>
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +65,8 @@
 
 static uint32_t g_ledcfg[BOARD_NLEDS] =
 {
-  GPIO_LED1, GPIO_LED2, GPIO_LED3, GPIO_LED4
+	GPIO_LED1,
+	GPIO_BEEPER1
 };
 
 /****************************************************************************
@@ -183,12 +186,8 @@ static int led_pm_prepare(struct pm_callback_s *cb, int domain,
 
 void board_userled_initialize(void)
 {
-   /* Configure LED1-4 GPIOs for output */
-
-   stm32_configgpio(GPIO_LED1);
-   stm32_configgpio(GPIO_LED2);
-   stm32_configgpio(GPIO_LED3);
-   stm32_configgpio(GPIO_LED4);
+	for (unsigned wled = 0; wled < BOARD_NLEDS; wled++)
+		stm32_configgpio(g_ledcfg[wled]);
 }
 
 /****************************************************************************
@@ -198,9 +197,7 @@ void board_userled_initialize(void)
 void board_userled(int led, bool ledon)
 {
   if ((unsigned)led < BOARD_NLEDS)
-    {
       stm32_gpiowrite(g_ledcfg[led], ledon);
-    }
 }
 
 /****************************************************************************
@@ -209,10 +206,9 @@ void board_userled(int led, bool ledon)
 
 void board_userled_all(uint8_t ledset)
 {
-  stm32_gpiowrite(GPIO_LED1, (ledset & BOARD_LED1_BIT) == 0);
-  stm32_gpiowrite(GPIO_LED2, (ledset & BOARD_LED2_BIT) == 0);
-  stm32_gpiowrite(GPIO_LED3, (ledset & BOARD_LED3_BIT) == 0);
-  stm32_gpiowrite(GPIO_LED4, (ledset & BOARD_LED4_BIT) == 0);
+	for (unsigned wled = 0; wled < BOARD_NLEDS; wled++)
+		stm32_gpiowrite(g_ledcfg[wled],
+				(ledset & (1 << wled)) == 0 ? 1 : 0);
 }
 
 /****************************************************************************
@@ -226,9 +222,7 @@ void stm32_led_pminitialize(void)
 
   int ret = pm_register(&g_ledscb);
   if (ret != OK)
-    {
       board_autoled_on(LED_ASSERTION);
-    }
 }
 #endif /* CONFIG_PM */
 

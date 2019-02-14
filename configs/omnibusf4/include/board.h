@@ -194,8 +194,11 @@
 
 /* LED definitions ******************************************************************/
 
-#define BOARD_LED1        0 /* TODO: PB5 */
-#define BOARD_BEEPER1     0 /* TODO: PB4 */
+#define BOARD_NLEDS     2
+#define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
+                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
+#define GPIO_BEEPER1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
+                         GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN4)
 
 
 /* Pin configurations **************************************************************/

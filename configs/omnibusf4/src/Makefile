@@ -41,11 +41,10 @@
 ASRCS =
 CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c
 
-# TODO: we don't have any LED support yet
 ifeq ($(CONFIG_ARCH_LEDS),y)
-#CSRCS += stm32_autoleds.c
+CSRCS += stm32_autoleds.c
 else
-#CSRCS += stm32_userleds.c
+CSRCS += stm32_userleds.c
 endif
 
 ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
