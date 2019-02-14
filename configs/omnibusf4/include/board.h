@@ -162,41 +162,11 @@
 #define BOARD_TIM7_FREQUENCY    (STM32_HCLK_FREQUENCY / 2)
 #define BOARD_TIM8_FREQUENCY    STM32_HCLK_FREQUENCY
 
-/* SDIO dividers.  Note that slower clocking is required when DMA is disabled
- * in order to avoid RX overrun/TX underrun errors due to delayed responses
- * to service FIFOs in interrupt driven mode.  These values have not been
- * tuned!!!
- *
- * SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(118+2)=400 KHz
- */
-
-#define SDIO_INIT_CLKDIV        (118 << SDIO_CLKCR_CLKDIV_SHIFT)
-
-/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
- * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
- */
-
-#ifdef CONFIG_SDIO_DMA
-#  define SDIO_MMCXFR_CLKDIV    (1 << SDIO_CLKCR_CLKDIV_SHIFT)
-#else
-#  define SDIO_MMCXFR_CLKDIV    (2 << SDIO_CLKCR_CLKDIV_SHIFT)
-#endif
-
-/* DMA ON:  SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(1+2)=16 MHz
- * DMA OFF: SDIOCLK=48MHz, SDIO_CK=SDIOCLK/(2+2)=12 MHz
- */
-
-#ifdef CONFIG_SDIO_DMA
-#  define SDIO_SDXFR_CLKDIV     (1 << SDIO_CLKCR_CLKDIV_SHIFT)
-#else
-#  define SDIO_SDXFR_CLKDIV     (2 << SDIO_CLKCR_CLKDIV_SHIFT)
-#endif
-
 
 /* Pin configurations **************************************************************/
 
 
-#define BOARD_NLEDS     2
+#define BOARD_NLEDS     2 /* one literal LED, one beeper */
 #define GPIO_LED1       (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
                          GPIO_OUTPUT_CLEAR|GPIO_PORTB|GPIO_PIN5)
 #define GPIO_BEEPER1    (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
@@ -269,7 +239,8 @@
 
 #define GPIO_SPI2_MISO    GPIO_SPI2_MISO_1  /* PB14 */
 #define GPIO_SPI2_MOSI    GPIO_SPI2_MOSI_1  /* PB15 */
-#define GPIO_SPI2_NSS     GPIO_SPI2_NSS_1   /* PB12 */
+#define GPIO_SPI2_NSS     (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
+			   GPIO_OUTPUT_SET|GPIO_PORTB|GPIO_PIN12)
 #define GPIO_SPI2_SCK     GPIO_SPI2_SCK_2   /* PB13 */
 #define DMACHAN_SPI2_RX   DMAMAP_SPI2_RX    /* 1:3:0 */
 #define DMACHAN_SPI2_TX   DMAMAP_SPI2_TX    /* 1:4:0 */
@@ -288,7 +259,7 @@
 */
 #define GPIO_SPI3_MISO    GPIO_SPI3_MISO_2  /* PC11 */
 #define GPIO_SPI3_MOSI    GPIO_SPI3_MOSI_2  /* PC12 */
-#define GPIO_SPI3_NSS     GPIO_SPI3_NSS_1   /* PA15 */
+#define GPIO_SPI3_NSS     GPIO_SPI3_NSS_1   /* PA15 */ /* TODO: doesn't work like a chip select */
 #define GPIO_SPI3_SCK     GPIO_SPI3_SCK_2   /* PC10 */
 
 
