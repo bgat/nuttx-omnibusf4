@@ -1,5 +1,6 @@
 /****************************************************************************
  * drivers/sensors/mpu60x0.c
+ *
  * Support for the Invensense MPU6000 and MPU6050 MotionTracking(tm)
  * 6-axis accelerometer and gyroscope.
  *
@@ -36,6 +37,10 @@
  *****************************************************************************/
 
 /****************************************************************************
+ * TODO: Theory of Operation
+ ****************************************************************************/
+
+/****************************************************************************
  * Included Files
  ****************************************************************************/
 #include <nuttx/config.h>
@@ -45,6 +50,7 @@
 
 /* TODO: I2C support and autodetection */
 /* TODO: SPI 1MHz for config registers, 20MHz for data registers */
+/* TODO: for slave device support, register a new i2c_master device */
 
 #include <errno.h>
 #include <debug.h>
@@ -52,9 +58,114 @@
 #include <semaphore.h>
 
 #include <nuttx/kmalloc.h>
-
+#include <nuttx/spi/spi.h>
 #include <nuttx/fs/fs.h>
 #include <nuttx/sensors/mpu60x0.h>
+
+typedef enum {
+	SELF_TEST_X = 0x0d,
+	SELF_TEST_Y = 0x0e,
+	SELF_TEST_Z = 0x0f,
+	SELF_TEST_A = 0x10,
+	SMPLRT_DIV = 0x19,
+	CONFIG = 0x1a,
+	GYRO_CONFIG = 0x1b,
+	ACCEL_CONFIG = 0x1c,
+	MOT_THR = 0x1f,
+	FIFO_EN = 0x23,
+	I2C_MST_CTRL = 0x24,
+	I2C_SLV0_ADDR = 0x25,
+	I2C_SLV0_REG = 0x26,
+	I2C_SLV0_CTRL = 0x27,
+	I2C_SLV1_ADDR = 0x28,
+	I2C_SLV1_REG = 0x29,
+	I2C_SLV1_CTRL = 0x2a,
+	I2C_SLV2_ADDR = 0x2b,
+	I2C_SLV2_REG = 0x2c,
+	I2C_SLV2_CTRL = 0x2d,
+	I2C_SLV3_ADDR = 0x2e,
+	I2C_SLV3_REG = 0x2f,
+	I2C_SLV3_CTRL = 0x30,
+	I2C_SLV4_ADDR = 0x31,
+	I2C_SLV4_REG = 0x32,
+	I2C_SLV4_DO = 0x33,
+	I2C_SLV4_CTRL = 0x34,
+	I2C_SLV4_DI = 0x35, /* RO */
+	I2C_MST_STATUS = 0x36, /* RO */
+	INT_PIN_CFG = 0x37,
+	INT_ENABLE = 0x38,
+	INT_STATUS = 0x3a, /* RO */
+	ACCEL_XOUT_H = 0x3b, /* RO */
+	ACCEL_XOUT_L = 0x3c, /* RO */
+	ACCEL_YOUT_H = 0x3d, /* RO */
+	ACCEL_YOUT_L = 0x3e, /* RO */
+	ACCEL_ZOUT_H = 0x3f, /* RO */
+	ACCEL_ZOUT_L = 0x40, /* RO */
+	TEMP_OUT_H = 0x41, /* RO */
+	TEMP_OUT_L = 0x42, /* RO */
+	GYRO_XOUT_H = 0x43, /* RO */
+	GYRO_XOUT_L = 0x44, /* RO */
+	GYRO_YOUT_H = 0x45, /* RO */
+	GYRO_YOUT_L = 0x46, /* RO */
+	GYRO_ZOUT_H = 0x47, /* RO */
+	GYRO_ZOUT_L = 0x48, /* RO */
+	EXT_SENS_DATA_00 = 0x49, /* RO */
+	EXT_SENS_DATA_01 = 0x4a, /* RO */
+	EXT_SENS_DATA_02 = 0x4b, /* RO */
+	EXT_SENS_DATA_03 = 0x4c, /* RO */
+	EXT_SENS_DATA_04 = 0x4d, /* RO */
+	EXT_SENS_DATA_05 = 0x4e, /* RO */
+	EXT_SENS_DATA_06 = 0x4f, /* RO */
+	EXT_SENS_DATA_07 = 0x50, /* RO */
+	EXT_SENS_DATA_08 = 0x51, /* RO */
+	EXT_SENS_DATA_09 = 0x52, /* RO */
+	EXT_SENS_DATA_10 = 0x53, /* RO */
+	EXT_SENS_DATA_11 = 0x54, /* RO */
+	EXT_SENS_DATA_12 = 0x55, /* RO */
+	EXT_SENS_DATA_13 = 0x56, /* RO */
+	EXT_SENS_DATA_14 = 0x57, /* RO */
+	EXT_SENS_DATA_15 = 0x58, /* RO */
+	EXT_SENS_DATA_16 = 0x59, /* RO */
+	EXT_SENS_DATA_17 = 0x5a, /* RO */
+	EXT_SENS_DATA_18 = 0x5b, /* RO */
+	EXT_SENS_DATA_19 = 0x5c, /* RO */
+	EXT_SENS_DATA_20 = 0x5d, /* RO */
+	EXT_SENS_DATA_21 = 0x5e, /* RO */
+	EXT_SENS_DATA_22 = 0x5f, /* RO */
+	EXT_SENS_DATA_23 = 0x60, /* RO */
+	I2C_SLV0_DO = 0x63,
+	I2C_SLV1_DO = 0x64,
+	I2C_SLV2_DO = 0x65,
+	I2C_SLV3_DO = 0x66,
+	I2C_MST_DELAY_CTRL = 0x67,
+	SIGNAL_PATH_RESET = 0x68,
+	MOT_DETECT_CTRL = 0x69,
+	USER_CTRL = 0x6a,
+	PWR_MGMT_1 = 0x6b, /* reset: 0x40 */
+	PWR_MGMT_2 = 0x6c,
+	FIFO_COUNTH = 0x72,
+	FIFO_COUNTL = 0x73,
+	FIFO_R_W = 0x74,
+	WHO_AM_I = 0x75, /* RO reset: 0x68 */
+} mpu_regaddr_t;
+
+/* SPI read/write codes */
+#define MPU_REG_READ 1
+#define MPU_REG_WRITE 0
+
+/* set_sample_rate():
+ *
+ * Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV) where Gyroscope
+ * Output Rate = 8kHz when the DLPF is disabled (DLPF_CFG = 0 or 7), and 1kHz
+ * when the DLPF is enabled (see Register 26).
+ *
+ * Note: The accelerometer output rate fixed at is 1kHz. This means that for a
+ * Sample Rate greater than 1kHz, the same accelerometer sample may be output
+ * to the FIFO, DMP, and sensor registers more than once.
+ *
+ */
+
+
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -76,236 +187,83 @@ struct sensor_data_s
 };
 
 /* TODO: config structure */
-struct mpu60x0_config_s
+struct mpu_config_s
 {
+	int spi_devid;
 };
 
-struct mpu60x0_dev_s
+struct mpu_dev_s
 {
   FAR struct spi_dev_s* spi;           /* SPI instance */
-  sem_t chiplock;                      /* mutex for the physical chip */
   sem_t lock;                          /* mutex for this structure */
-  struct mpu60x0_config_s* config;
+  struct mpu_config_s* config;
 };
 
 
-/****************************************************************************
- * Private Function Prototypes
- ****************************************************************************/
+/* TODO: there are ways of combining this with __mpu_write_reg()... */
+static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
+			  mpu_regaddr_t reg_addr,
+			  uint8_t *buf, uint8_t len)
+{
+	if (dev->spi == NULL)
+		return -ENODEV;
 
+	int ret = len;
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
+	SPI_LOCK(dev->spi, true);
+
+	SPI_SETFREQUENCY(dev->spi, 1000000);
+	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
+
+	SPI_SELECT(dev->spi, dev->config->spi_devid, true);
+
+	SPI_SEND(dev->spi, reg_addr | MPU_REG_READ);
+
+	while (0 != len--)
+		*buf++ = (uint8_t)(SPI_SEND(dev->spi, 0xff));
+
+	SPI_SELECT(dev->spi, dev->config->spi_devid, false);
+	SPI_LOCK(dev->spi, false);
+
+	return ret;
+}
+
+static uint8_t __mpu_read_WHO_AM_I(FAR struct mpu_dev_s* dev)
+{
+	uint8_t buf = 0xff;
+	__mpu_read_reg(dev, WHO_AM_I, &buf, sizeof(buf));
+	return buf;
+}
+
+static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
+			   mpu_regaddr_t reg_addr,
+			   const uint8_t *buf, uint8_t len)
+{
+	if (dev->spi == NULL)
+		return -ENODEV;
+
+	int ret = len;
+
+	SPI_LOCK(dev->spi, true);
+
+	SPI_SETFREQUENCY(dev->spi, 1000000);
+	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
+
+	SPI_SELECT(dev->spi, dev->config->spi_devid, true);
+
+	SPI_SEND(dev->spi, reg_addr | MPU_REG_WRITE);
+
+	while (0 != len--)
+		SPI_SEND(dev->spi, *buf++);
+
+	SPI_SELECT(dev->spi, dev->config->spi_devid, false);
+	SPI_LOCK(dev->spi, false);
+
+	return ret;
+}
 
 
 #if 0
-
-/****************************************************************************
- * Private data storage
- ****************************************************************************/
-
-/* Default accelerometer initialization sequence */
-
-/* Configure ADXL372 to read live data (not using FIFO).
- * 1. Set to standby mode. The below can't be set while running.
- * 2. Configure the FIFO to be bypassed.
- * 3. Configure interrupts as disabled, because ADXL372 irpts are used.
- * 4. Configure the Output Data Rate (ODR) as 1600 Hz.
- * 5. Configure normal mode (vs low noise) and 800Hz bandwidth.
- * 6. Set to operational mode; 370ms filter settle; LPF=enb; HPF=dis;
- */
-
-static struct adxl372_reg_pair_s g_initial_adxl372_cr_values[] =
-{
-  /* Set to standby mode */
-
-  {
-    .addr  = ADXL372_POWER_CTL,
-    .value = 0
-  },
-  {
-    .addr  = ADXL372_FIFO_CTL,
-    .value = ADXL372_FIFO_BYPASSED
-  },
-
-  /* Interrupts disabled. */
-
-  {
-    .addr  = ADXL372_INT1_MAP,
-    .value = 0
-  },
-  {
-    .addr  = ADXL372_TIMING,
-    .value = ADXL372_TIMING_ODR1600
-  },
-  {
-    .addr  = ADXL372_MEASURE,
-    .value = ADXL372_MEAS_BW800
-  },
-  {
-    .addr  = ADXL372_POWER_CTL,
-    .value = ADXL372_POWER_HPF_DISABLE | ADXL372_POWER_MODE_MEASURE
-  }
-};
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: adxl372_read_register
- ****************************************************************************/
-
-static uint8_t adxl372_read_register(FAR struct adxl372_dev_s *dev,
-                                     uint8_t reg_addr)
-{
-  uint8_t reg_data;
-
-  /* Lock the SPI bus so that only one device can access it at the same time */
-
-  SPI_LOCK(dev->spi, true);
-
-  SPI_SETFREQUENCY(dev->spi, ADXL372_SPI_FREQUENCY);
-  SPI_SETMODE(dev->spi, ADXL372_SPI_MODE);
-
-  /* Set CS to low to select the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, true);
-
-  /* Transmit the register address from where we want to read. */
-
-  SPI_SEND(dev->spi, reg_addr | ADXL372_READ);
-
-  /* Write an idle byte while receiving the requested data */
-
-  reg_data = (uint8_t) (SPI_SEND(dev->spi, 0xff));
-
-  /* Set CS to high to deselect the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, false);
-
-  /* Unlock the SPI bus */
-
-  SPI_LOCK(dev->spi, false);
-
-  return reg_data;
-}
-
-/******************************************************************************
- * Name: adxl372_read_registerblk
- ******************************************************************************/
-
- static void adxl372_read_registerblk(FAR struct adxl372_dev_s *dev,
-                                      uint8_t reg_addr,
-                                      FAR uint8_t *reg_data,
-                                      uint8_t xfercnt)
-{
-  /* Lock the SPI bus so that only one device can access it at the same time */
-
-  SPI_LOCK(dev->spi, true);
-
-  SPI_SETFREQUENCY(dev->spi, ADXL372_SPI_FREQUENCY);
-  SPI_SETMODE(dev->spi, ADXL372_SPI_MODE);
-
-  /* Set CS to low to select the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, true);
-
-  /* Transmit the register address from where we want to start reading */
-
-  SPI_SEND(dev->spi, reg_addr | ADXL372_READ);
-
-  /* Write idle bytes while receiving the requested data */
-
-  while ( 0 != xfercnt-- )
-    {
-      *reg_data++ = (uint8_t)SPI_SEND(dev->spi, 0xff);
-    }
-
-  /* Set CS to high to deselect the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, false);
-
-  /* Unlock the SPI bus */
-
-  SPI_LOCK(dev->spi, false);
-}
-
-/****************************************************************************
- * Name: adxl372_write_register
- ****************************************************************************/
-
-static void adxl372_write_register(FAR struct adxl372_dev_s *dev,
-                                   uint8_t reg_addr, uint8_t reg_data)
-{
-  /* Lock the SPI bus so that only one device can access it at the same time */
-
-  SPI_LOCK(dev->spi, true);
-
-  SPI_SETFREQUENCY(dev->spi, ADXL372_SPI_FREQUENCY);
-  SPI_SETMODE(dev->spi, ADXL372_SPI_MODE);
-
-  /* Set CS to low to select the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, true);
-
-  /* Transmit the register address to where we want to write */
-
-  SPI_SEND(dev->spi, reg_addr | ADXL372_WRITE);
-
-  /* Transmit the content which should be written into the register */
-
-  SPI_SEND(dev->spi, reg_data);
-
-  /* Set CS to high to deselect the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, false);
-
-  /* Unlock the SPI bus */
-
-  SPI_LOCK(dev->spi, false);
-}
-
-/****************************************************************************
- * Name: adxl372_write_registerblk
- ****************************************************************************/
-
- static void adxl372_write_registerblk(FAR struct adxl372_dev_s *dev,
-                                       uint8_t reg_addr,
-                                       FAR uint8_t *reg_data,
-                                       uint8_t xfercnt)
-{
-  /* Lock the SPI bus so that only one device can access it at the same time */
-
-  SPI_LOCK(dev->spi, true);
-
-  SPI_SETFREQUENCY(dev->spi, ADXL372_SPI_FREQUENCY);
-  SPI_SETMODE(dev->spi, ADXL372_SPI_MODE);
-
-  /* Set CS to low which selects the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, true);
-
-  /* Transmit the register address to where we want to start writing */
-
-  SPI_SEND(dev->spi, reg_addr | ADXL372_WRITE);
-
-  /* Transmit the content which should be written in the register block */
-
-  while ( 0 != xfercnt-- )
-    {
-      SPI_SEND(dev->spi, *reg_data++);
-    }
-
-  /* Set CS to high to deselect the ADXL372 */
-
-  SPI_SELECT(dev->spi, dev->config->spi_devid, false);
-
-  /* Unlock the SPI bus */
-
-  SPI_LOCK(dev->spi, false);
-}
 
 /****************************************************************************
  * Name: adxl372_reset
@@ -686,7 +644,7 @@ static void adxl372_dvr_exchange(FAR void *instance_handle,
  static int mpu60x0_open(FAR struct file *filep)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
   int ret = 0;
 
   UNUSED(inode);
@@ -702,7 +660,7 @@ static void adxl372_dvr_exchange(FAR void *instance_handle,
 static int mpu60x0_close(FAR struct file *filep)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
   int ret = 0;
 
   UNUSED(inode);
@@ -719,7 +677,7 @@ snerr("%s: %p %p\n", __FUNCTION__, inode, priv);
 static ssize_t mpu60x0_read(FAR struct file *filep, FAR char* buf, size_t len)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
 
   UNUSED(inode);
   UNUSED(priv);
@@ -736,7 +694,7 @@ static ssize_t mpu60x0_read(FAR struct file *filep, FAR char* buf, size_t len)
 static ssize_t mpu60x0_write(FAR struct file *filep, FAR const char* buf, size_t len)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
 
   UNUSED(inode);
   UNUSED(priv);
@@ -753,7 +711,7 @@ static ssize_t mpu60x0_write(FAR struct file *filep, FAR const char* buf, size_t
 static off_t mpu60x0_seek(FAR struct file *filep, off_t offset, int whence)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
 
   UNUSED(inode);
   UNUSED(priv);
@@ -770,7 +728,7 @@ static off_t mpu60x0_seek(FAR struct file *filep, off_t offset, int whence)
 static int mpu60x0_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 {
   FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu60x0_dev_s *priv = inode->i_private;
+  FAR struct mpu_dev_s *priv = inode->i_private;
 
   UNUSED(inode);
   UNUSED(priv);
@@ -815,9 +773,9 @@ static const struct file_operations g_mpu60x0_fops =
 
 int mpu60x0_register(FAR const char* path,
                      FAR struct spi_dev_s* spi,
-		     FAR struct mpu60x0_config_s* config)
+		     FAR struct mpu_config_s* config)
 {
-  FAR struct mpu60x0_dev_s* priv;
+  FAR struct mpu_dev_s* priv;
   int ret;
 
   DEBUGASSERT(spi != NULL);
@@ -825,13 +783,12 @@ int mpu60x0_register(FAR const char* path,
 
   /* Initialize the device structure. */
 
-  priv = (FAR struct mpu60x0_dev_s*)kmm_malloc(sizeof(struct mpu60x0_dev_s));
+  priv = (FAR struct mpu_dev_s*)kmm_malloc(sizeof(struct mpu_dev_s));
   if (priv == NULL)
     {
       snerr("ERROR: Failed to allocate accelerometer instance\n");
       return -ENOMEM;
     }
-  nxsem_init(&priv->chiplock, 0, 1);
   nxsem_init(&priv->lock, 0, 1);
 
   priv->spi = spi;
@@ -842,13 +799,15 @@ int mpu60x0_register(FAR const char* path,
     {
       snerr("ERROR: Failed to register mpu60x0 interface: %d\n", ret);
 
-      nxsem_destroy(&priv->chiplock);
       nxsem_destroy(&priv->lock);
       
       kmm_free(priv);
       return ret;
     }
 
+  uint8_t whoami = __mpu_read_WHO_AM_I(priv);
+  sninfo("INFO: WHO_AM_I = %x\n", whoami);
+  
   return 0;
 }
 
