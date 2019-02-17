@@ -2263,6 +2263,9 @@ endif
 if ARCH_BOARD_OLIMEXINO_STM32
 source "configs/olimexino-stm32/Kconfig"
 endif
+if ARCH_BOARD_OMNIBUSF4
+source "configs/omnibusf4/Kconfig"
+endif
 if ARCH_BOARD_OPEN1788
 source "configs/open1788/Kconfig"
 endif
