@@ -39,7 +39,12 @@
 -include $(TOPDIR)/Make.defs
 
 ASRCS =
-CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c stm32_userleds.c
+CSRCS = stm32_boot.c stm32_bringup.c stm32_spi.c stm32_userleds.c stm32_mpu6000.c
+
+# TODO: make this work
+ifeq ($(CONFIG_SENSORS_MPU6000),y)
+CSRCS += stm32_mpu6000.c
+endif
 
 ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
 CSRCS += stm32_critmon.c

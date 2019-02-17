@@ -227,7 +227,7 @@
 #define GPIO_SPI1_MISO    GPIO_SPI1_MISO_1  /* PA6 */
 #define GPIO_SPI1_MOSI    GPIO_SPI1_MOSI_1  /* PA7 */
 #define GPIO_SPI1_SCK     GPIO_SPI1_SCK_1   /* PA5 */
-#define GPIO_SPI1_NSS     GPIO_SPI1_NSS_2   /* PA4 */
+//#define GPIO_SPI1_NSS     GPIO_SPI1_NSS_2   /* PA4 */
 #define DMACHAN_SPI1_RX   DMAMAP_SPI1_RX_1  /* 2:0:3 */
 #define DMACHAN_SPI1_TX   DMAMAP_SPI1_TX_1  /* 2:3:3 */
 

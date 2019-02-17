@@ -68,24 +68,7 @@
 
 /* OMNIBUSF4 GPIOs **************************************************/
 
-
-/* TODO: SPI chip selects */
-#if 0
-
-/* MPU6000: SPI1, SPI1_NSS (PA4); INT PC4 */
-
-#define GPIO_CS_MEMS      (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|	\
-                           GPIO_OUTPUT_SET|GPIO_PORTE|GPIO_PIN3)
-
-#define GPIO_MAX31855_CS  (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                           GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN8)
-
-#define GPIO_MAX6675_CS   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                           GPIO_OUTPUT_SET|GPIO_PORTD|GPIO_PIN8)
-
-#define GPIO_MAX7219_CS   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|\
-                           GPIO_OUTPUT_SET|GPIO_PORTC|GPIO_PIN3)
-#endif
+/* TODO: why do we need these here, and not just in of4_mpu6000.c? */
 
 /* USB OTG FS:
  *

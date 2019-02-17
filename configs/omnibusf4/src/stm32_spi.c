@@ -72,11 +72,11 @@
 void weak_function stm32_spidev_initialize(void)
 {
 #ifdef CONFIG_STM32_SPI1
-  (void)stm32_configgpio(GPIO_CS_MEMS);    /* MEMS chip select */
+	/* the only thing on SPI1 is the mpu6000, initialized elsewhere */
 #endif
 #if defined(CONFIG_MMCSD_SPI)
-  (void)stm32_configgpio(GPIO_MMCSD_NCD);  /* SD_DET */
-  (void)stm32_configgpio(GPIO_MMCSD_NSS);  /* CS */
+	(void)stm32_configgpio(GPIO_MMCSD_NCD);  /* SD_DET */
+	(void)stm32_configgpio(GPIO_MMCSD_NSS);  /* CS */
 #endif
 }
 
@@ -109,30 +109,7 @@ void weak_function stm32_spidev_initialize(void)
 void stm32_spi1select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
   spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
-
-#ifdef CONFIG_LCD_ST7567
-  if (devid == SPIDEV_DISPLAY(0))
-    {
-      stm32_gpiowrite(STM32_LCD_CS, !selected);
-    }
-#endif
-#if defined(CONFIG_LCD_MAX7219) || defined(CONFIG_LEDS_MAX7219)
-  if (devid == SPIDEV_DISPLAY(0))
-    {
-      stm32_gpiowrite(GPIO_MAX7219_CS, !selected);
-    }
-#endif
-#if defined(CONFIG_LCD_UG2864AMBAG01) || defined(CONFIG_LCD_UG2864HSWEG01) || \
-    defined(CONFIG_LCD_SSD1351)
-  if (devid == SPIDEV_DISPLAY(0))
-    {
-      stm32_gpiowrite(GPIO_OLED_CS, !selected);
-    }
-  else
-#endif
-    {
-      stm32_gpiowrite(GPIO_CS_MEMS, !selected);
-    }
+      stm32_gpiowrite(GPIO_CS_MPU6000, !selected);
 }
 
 uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, uint32_t devid)
@@ -193,40 +170,6 @@ uint8_t stm32_spi3status(FAR struct spi_dev_s *dev, uint32_t devid)
 #ifdef CONFIG_STM32_SPI1
 int stm32_spi1cmddata(FAR struct spi_dev_s *dev, uint32_t devid, bool cmd)
 {
-#ifdef CONFIG_LCD_ST7567
-  if (devid == SPIDEV_DISPLAY(0))
-    {
-      /*  This is the Data/Command control pad which determines whether the
-       *  data bits are data or a command.
-       */
-
-      (void)stm32_gpiowrite(STM32_LCD_RS, !cmd);
-
-      return OK;
-    }
-#endif
-#if defined(CONFIG_LCD_UG2864AMBAG01) || defined(CONFIG_LCD_UG2864HSWEG01) || \
-    defined(CONFIG_LCD_SSD1351)
-  if (devid == SPIDEV_DISPLAY(0))
-    {
-      /* "This is the Data/Command control pad which determines whether the
-       *  data bits are data or a command.
-       *
-       *  A0 = "H": the inputs at D0 to D7 are treated as display data.
-       *  A0 = "L": the inputs at D0 to D7 are transferred to the command
-       *       registers."
-       */
-
-# if defined(CONFIG_LCD_UG2864AMBAG01)
-      (void)stm32_gpiowrite(GPIO_OLED_A0, !cmd);
-# endif
-# if defined(CONFIG_LCD_UG2864HSWEG01) || defined(CONFIG_LCD_SSD1351)
-      (void)stm32_gpiowrite(GPIO_OLED_DC, !cmd);
-# endif
-      return OK;
-    }
-#endif
-
   return -ENODEV;
 }
 #endif

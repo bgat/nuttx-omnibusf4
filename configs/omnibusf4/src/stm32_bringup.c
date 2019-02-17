@@ -228,6 +228,12 @@ int stm32_bringup(void)
     }
 #endif
 
+#define CONFIG_SENSORS_MPU6000
+#ifdef CONFIG_SENSORS_MPU6000
+  extern int stm32_mpu6000_initialize(void);
+  ret = stm32_mpu6000_initialize();
+#endif
+
 #ifdef CONFIG_SENSORS_QENCODER
   /* Initialize and register the qencoder driver */
 
