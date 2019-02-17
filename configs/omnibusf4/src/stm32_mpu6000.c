@@ -54,15 +54,6 @@
 #include "stm32_spi.h"
 #include "omnibusf4.h"
 
-
-#define SPIPORT_MPU6000   1
-#define SPIMINOR_MPU6000  0
-#define GPIO_CS_MPU6000   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|	\
-                           GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
-#define GPIO_EXTI_MPU6000 (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_50MHz| \
-			   GPIO_OPENDRAIN|GPIO_PORTC|GPIO_PIN4)
-#define DEVNODE_MPU6000   "/dev/imu0"
-
 struct mpu60x0_config_s;
 extern int mpu60x0_register(FAR const char* path,
 			    FAR struct spi_dev_s* spi,

@@ -68,7 +68,13 @@
 
 /* OMNIBUSF4 GPIOs **************************************************/
 
-/* TODO: why do we need these here, and not just in of4_mpu6000.c? */
+#define SPIPORT_MPU6000   1
+#define SPIMINOR_MPU6000  0
+#define GPIO_CS_MPU6000   (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_50MHz|	\
+                           GPIO_OUTPUT_SET|GPIO_PORTA|GPIO_PIN4)
+#define GPIO_EXTI_MPU6000 (GPIO_INPUT|GPIO_FLOAT|GPIO_SPEED_50MHz| \
+			   GPIO_OPENDRAIN|GPIO_PORTC|GPIO_PIN4)
+#define DEVNODE_MPU6000   "/dev/imu0"
 
 /* USB OTG FS:
  *
