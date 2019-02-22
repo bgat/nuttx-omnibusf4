@@ -62,6 +62,9 @@
 #include <nuttx/fs/fs.h>
 #include <nuttx/sensors/mpu60x0.h>
 
+/* creates a mask of @m bits, i.e. MASK(2) -> 00000011 */
+#define MASK(m) ((1 << ((m) + 1)) - 1)
+
 typedef enum {
 	SELF_TEST_X = 0x0d,
 	SELF_TEST_Y = 0x0e,
@@ -69,27 +72,32 @@ typedef enum {
 	SELF_TEST_A = 0x10,
 	SMPLRT_DIV = 0x19,
 
-	/* note: apply __mask first, then __shift */
 	/* TODO: these help us create fields, but not read them back... */
-	
+	/*
+	 * __shift : number of empty bits to the right of the field
+	 * __width : width of the field, in bits
+	 *
+	 * single-bit fields don't have __shift or __mask
+	 */
 	CONFIG = 0x1a,
 	CONFIG__EXT_SYNC_SET__shift = 3,
-	CONFIG__EXT_SYNC_SET__mask = (1 << 3) - 1,
-	CONFIG__DLPF_CFG__mask = ((1 << 3) - 1),
+	CONFIG__EXT_SYNC_SET__width = 2,
+	CONFIG__DLPF_CFG__shift = 0,
+	CONFIG__DLPF_CFG__width = 2,
 	
 	GYRO_CONFIG = 0x1b,
 	GYRO_CONFIG__XG_ST = (1 << 7),
 	GYRO_CONFIG__YG_ST = (1 << 6),
 	GYRO_CONFIG__ZG_ST = (1 << 5),
 	GYRO_CONFIG__FS_SEL__shift = 3,
-	GYRO_CONFIG__FS_SEL__mask = (1 << 2) - 1,
+	GYRO_CONFIG__FS_SEL__width = 2,
 	
 	ACCEL_CONFIG = 0x1c,
 	ACCEL_CONFIG__XA_ST = (1 << 7),
 	ACCEL_CONFIG__YA_ST = (1 << 6),
 	ACCEL_CONFIG__ZA_ST = (1 << 5),
 	ACCEL_CONFIG__AFS_SEL__shift = 3,
-	ACCEL_CONFIG__AFS_SEL__mask = (1 << 2) - 1,
+	ACCEL_CONFIG__AFS_SEL__width = 2,
 
 	MOT_THR = 0x1f,
 	FIFO_EN = 0x23,
@@ -191,7 +199,8 @@ typedef enum {
 	PWR_MGMT_1__SLEEP = (1 << 6),
 	PWR_MGMT_1__CYCLE = (1 << 5),
 	PWR_MGMT_1__TEMP_DIS = (1 << 3),
-	PWR_MGMT_1__CLK_SEL__mask = (1 << 3) - 1,
+	PWR_MGMT_1__CLK_SEL__shift = 0,
+	PWR_MGMT_1__CLK_SEL__width = 3,
 
 	PWR_MGMT_2 = 0x6c,
 	FIFO_COUNTH = 0x72,
@@ -346,7 +355,7 @@ static inline int __mpu_write_USER_CTRL(FAR struct mpu_dev_s* dev, uint8_t val)
 
 static inline int __mpu_write_GYRO_CONFIG(FAR struct mpu_dev_s* dev, uint8_t fs_sel)
 {
-	uint8_t val = (fs_sel & GYRO_CONFIG__FS_SEL__mask)
+	uint8_t val = (fs_sel & MASK(GYRO_CONFIG__FS_SEL__width))
 		<< GYRO_CONFIG__FS_SEL__shift;
 
 	return __mpu_write_reg(dev, GYRO_CONFIG, &val, sizeof(val));
@@ -354,7 +363,7 @@ static inline int __mpu_write_GYRO_CONFIG(FAR struct mpu_dev_s* dev, uint8_t fs_
 
 static inline int __mpu_write_ACCEL_CONFIG(FAR struct mpu_dev_s* dev, uint8_t afs_sel)
 {
-	uint8_t val = (afs_sel & ACCEL_CONFIG__AFS_SEL__mask)
+	uint8_t val = (afs_sel & MASK(ACCEL_CONFIG__AFS_SEL__width))
 		<< ACCEL_CONFIG__AFS_SEL__shift;
 
 	return __mpu_write_reg(dev, ACCEL_CONFIG, &val, sizeof(val));
@@ -364,9 +373,10 @@ static inline int __mpu_write_CONFIG(FAR struct mpu_dev_s* dev,
 				     uint8_t ext_sync_set, uint8_t dlpf_cfg)
 {
 	/* TODO: template macro, i.e. REG_FIELD(CONFIG, EXT_SYNC_SET, <value>) */
-	uint8_t val = (ext_sync_set & CONFIG__EXT_SYNC_SET__mask)
+	uint8_t val = (ext_sync_set & MASK(CONFIG__EXT_SYNC_SET__width))
 		<< CONFIG__EXT_SYNC_SET__shift;
-	val |= (dlpf_cfg & CONFIG__DLPF_CFG__mask);
+	val |= ((dlpf_cfg & MASK(CONFIG__DLPF_CFG__width))
+		<< CONFIG__DLPF_CFG__shift);
 
 	return __mpu_write_reg(dev, CONFIG, &val, sizeof(val));
 }
