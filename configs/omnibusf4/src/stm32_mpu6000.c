@@ -67,16 +67,14 @@ int stm32_mpu6000_initialize(void)
 	int exti = GPIO_EXTI_MPU6000;
 	int cs = GPIO_CS_MPU6000;
 
-	stm32_configgpio(GPIO_CS_MPU6000);
-	stm32_configgpio(GPIO_EXTI_MPU6000);
-		
 	UNUSED(path);
 	UNUSED(minor);
+
 	/* get the spi bus instance */
 	struct spi_dev_s* spi = stm32_spibus_initialize(port);
 	if (spi == NULL)
 		return -ENODEV;
-	/* configure EXTI */
+	/* TODO: configure EXTI */
 	/* ... */
 
 	/* TODO: callbacks for interrupt, slave-select */

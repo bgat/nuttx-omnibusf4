@@ -72,7 +72,8 @@
 void weak_function stm32_spidev_initialize(void)
 {
 #ifdef CONFIG_STM32_SPI1
-	/* the only thing on SPI1 is the mpu6000, initialized elsewhere */
+	stm32_configgpio(GPIO_CS_MPU6000);
+	stm32_configgpio(GPIO_EXTI_MPU6000);
 #endif
 #if defined(CONFIG_MMCSD_SPI)
 	(void)stm32_configgpio(GPIO_MMCSD_NCD);  /* SD_DET */
@@ -108,13 +109,13 @@ void weak_function stm32_spidev_initialize(void)
 #ifdef CONFIG_STM32_SPI1
 void stm32_spi1select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected)
 {
-  spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
-      stm32_gpiowrite(GPIO_CS_MPU6000, !selected);
+	spiinfo("devid: %d CS: %s\n", (int)devid, selected ? "assert" : "de-assert");
+	stm32_gpiowrite(GPIO_CS_MPU6000, !selected);
 }
 
 uint8_t stm32_spi1status(FAR struct spi_dev_s *dev, uint32_t devid)
 {
-  return 0;
+	return 0;
 }
 #endif
 

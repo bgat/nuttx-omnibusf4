@@ -68,9 +68,29 @@ typedef enum {
 	SELF_TEST_Z = 0x0f,
 	SELF_TEST_A = 0x10,
 	SMPLRT_DIV = 0x19,
+
+	/* note: apply __mask first, then __shift */
+	/* TODO: these help us create fields, but not read them back... */
+	
 	CONFIG = 0x1a,
+	CONFIG__EXT_SYNC_SET__shift = 3,
+	CONFIG__EXT_SYNC_SET__mask = (1 << 3) - 1,
+	CONFIG__DLPF_CFG__mask = ((1 << 3) - 1),
+	
 	GYRO_CONFIG = 0x1b,
+	GYRO_CONFIG__XG_ST = (1 << 7),
+	GYRO_CONFIG__YG_ST = (1 << 6),
+	GYRO_CONFIG__ZG_ST = (1 << 5),
+	GYRO_CONFIG__FS_SEL__shift = 3,
+	GYRO_CONFIG__FS_SEL__mask = (1 << 2) - 1,
+	
 	ACCEL_CONFIG = 0x1c,
+	ACCEL_CONFIG__XA_ST = (1 << 7),
+	ACCEL_CONFIG__YA_ST = (1 << 6),
+	ACCEL_CONFIG__ZA_ST = (1 << 5),
+	ACCEL_CONFIG__AFS_SEL__shift = 3,
+	ACCEL_CONFIG__AFS_SEL__mask = (1 << 2) - 1,
+
 	MOT_THR = 0x1f,
 	FIFO_EN = 0x23,
 	I2C_MST_CTRL = 0x24,
@@ -92,9 +112,19 @@ typedef enum {
 	I2C_SLV4_CTRL = 0x34,
 	I2C_SLV4_DI = 0x35, /* RO */
 	I2C_MST_STATUS = 0x36, /* RO */
+
 	INT_PIN_CFG = 0x37,
+	INT_PIN_CFG__INT_LEVEL = (1 << 7),
+	INT_PIN_CFG__INT_OPEN = (1 << 6),
+	INT_PIN_CFG__LATCH_INT_EN = (1 << 5),
+	INT_PIN_CFG__INT_RD_CLEAR = (1 << 4),
+	INT_PIN_CFG__FSYNC_INT_LEVEL = (1 << 3),
+	INT_PIN_CFG__FSYNC_INT_EN = (1 << 2),
+	INT_PIN_CFG__I2C_BYPASS_EN = (1 << 1),
+
 	INT_ENABLE = 0x38,
 	INT_STATUS = 0x3a, /* RO */
+
 	ACCEL_XOUT_H = 0x3b, /* RO */
 	ACCEL_XOUT_L = 0x3c, /* RO */
 	ACCEL_YOUT_H = 0x3d, /* RO */
@@ -109,6 +139,7 @@ typedef enum {
 	GYRO_YOUT_L = 0x46, /* RO */
 	GYRO_ZOUT_H = 0x47, /* RO */
 	GYRO_ZOUT_L = 0x48, /* RO */
+
 	EXT_SENS_DATA_00 = 0x49, /* RO */
 	EXT_SENS_DATA_01 = 0x4a, /* RO */
 	EXT_SENS_DATA_02 = 0x4b, /* RO */
@@ -138,10 +169,30 @@ typedef enum {
 	I2C_SLV2_DO = 0x65,
 	I2C_SLV3_DO = 0x66,
 	I2C_MST_DELAY_CTRL = 0x67,
+
 	SIGNAL_PATH_RESET = 0x68,
+	SIGNAL_PATH_RESET__GYRO_RESET = (1 << 2),
+	SIGNAL_PATH_RESET__ACCEL_RESET = (1 << 1),
+	SIGNAL_PATH_RESET__TEMP_RESET = (1 << 0),
+	SIGNAL_PATH_RESET__ALL_RESET = (1 << 3) - 1,
+
 	MOT_DETECT_CTRL = 0x69,
+
 	USER_CTRL = 0x6a,
+	USER_CTRL__FIFO_EN = (1 << 6),
+	USER_CTRL__I2C_MST_EN = (1 << 5),
+	USER_CTRL__I2C_IF_DIS = (1 << 4),
+	USER_CTRL__FIFO_RESET = (1 << 2),
+	USER_CTRL__I2C_MST_RESET = (1 << 1),
+	USER_CTRL__SIG_COND_RESET = (1 << 0),
+
 	PWR_MGMT_1 = 0x6b, /* reset: 0x40 */
+	PWR_MGMT_1__DEVICE_RESET = (1 << 7),
+	PWR_MGMT_1__SLEEP = (1 << 6),
+	PWR_MGMT_1__CYCLE = (1 << 5),
+	PWR_MGMT_1__TEMP_DIS = (1 << 3),
+	PWR_MGMT_1__CLK_SEL__mask = (1 << 3) - 1,
+
 	PWR_MGMT_2 = 0x6c,
 	FIFO_COUNTH = 0x72,
 	FIFO_COUNTL = 0x73,
@@ -150,7 +201,7 @@ typedef enum {
 } mpu_regaddr_t;
 
 /* SPI read/write codes */
-#define MPU_REG_READ 1
+#define MPU_REG_READ 0x80
 #define MPU_REG_WRITE 0
 
 /* set_sample_rate():
@@ -165,15 +216,6 @@ typedef enum {
  *
  */
 
-
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Private structure definitions
- ****************************************************************************/
 
 struct sensor_data_s
 {
@@ -228,11 +270,11 @@ static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
 	return ret;
 }
 
-static uint8_t __mpu_read_WHO_AM_I(FAR struct mpu_dev_s* dev)
+static inline uint8_t __mpu_read_WHO_AM_I(FAR struct mpu_dev_s* dev)
 {
-	uint8_t buf = 0xff;
-	__mpu_read_reg(dev, WHO_AM_I, &buf, sizeof(buf));
-	return buf;
+	uint8_t val = 0xff;
+	__mpu_read_reg(dev, WHO_AM_I, &val, sizeof(val));
+	return val;
 }
 
 static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
@@ -262,7 +304,115 @@ static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
 	return ret;
 }
 
+/* reads the whole IMU data file in one pass */
+static inline int __mpu_read_imu(FAR struct mpu_dev_s* dev, uint8_t* buf, uint8_t len)
+{
+	uint8_t nreg = (GYRO_ZOUT_L - ACCEL_XOUT_H + 1);
+	__mpu_read_reg(dev, ACCEL_XOUT_H, buf, nreg < len ? nreg : len);
+	return nreg;
+}
 
+static inline uint8_t __mpu_read_PWR_MGMT_1(FAR struct mpu_dev_s* dev)
+{
+	uint8_t buf = 0xff;
+	__mpu_read_reg(dev, PWR_MGMT_1, &buf, sizeof(buf));
+	return buf;
+}
+
+static inline int __mpu_write_SIGNAL_PATH_RESET(FAR struct mpu_dev_s* dev, uint8_t val)
+{
+	return __mpu_write_reg(dev, SIGNAL_PATH_RESET, &val, sizeof(val));
+}
+
+static inline int __mpu_write_INT_PIN_CFG(FAR struct mpu_dev_s* dev, uint8_t val)
+{
+	return __mpu_write_reg(dev, INT_PIN_CFG, &val, sizeof(val));
+}
+
+static inline int __mpu_write_PWR_MGMT_1(FAR struct mpu_dev_s* dev, uint8_t val)
+{
+	return __mpu_write_reg(dev, PWR_MGMT_1, &val, sizeof(val));
+}
+
+static inline int __mpu_write_PWR_MGMT_2(FAR struct mpu_dev_s* dev, uint8_t val)
+{
+	return __mpu_write_reg(dev, PWR_MGMT_2, &val, sizeof(val));
+}
+
+static inline int __mpu_write_USER_CTRL(FAR struct mpu_dev_s* dev, uint8_t val)
+{
+	return __mpu_write_reg(dev, USER_CTRL, &val, sizeof(val));
+}
+
+static inline int __mpu_write_GYRO_CONFIG(FAR struct mpu_dev_s* dev, uint8_t fs_sel)
+{
+	uint8_t val = (fs_sel & GYRO_CONFIG__FS_SEL__mask)
+		<< GYRO_CONFIG__FS_SEL__shift;
+
+	return __mpu_write_reg(dev, GYRO_CONFIG, &val, sizeof(val));
+}
+
+static inline int __mpu_write_ACCEL_CONFIG(FAR struct mpu_dev_s* dev, uint8_t afs_sel)
+{
+	uint8_t val = (afs_sel & ACCEL_CONFIG__AFS_SEL__mask)
+		<< ACCEL_CONFIG__AFS_SEL__shift;
+
+	return __mpu_write_reg(dev, ACCEL_CONFIG, &val, sizeof(val));
+}
+
+static inline int __mpu_write_CONFIG(FAR struct mpu_dev_s* dev,
+				     uint8_t ext_sync_set, uint8_t dlpf_cfg)
+{
+	/* TODO: template macro, i.e. REG_FIELD(CONFIG, EXT_SYNC_SET, <value>) */
+	uint8_t val = (ext_sync_set & CONFIG__EXT_SYNC_SET__mask)
+		<< CONFIG__EXT_SYNC_SET__shift;
+	val |= (dlpf_cfg & CONFIG__DLPF_CFG__mask);
+
+	return __mpu_write_reg(dev, CONFIG, &val, sizeof(val));
+}
+
+static int mpu_reset(FAR struct mpu_dev_s* dev)
+{
+	/* TODO: lock the dev structure */
+
+	/* awaken chip, issue hardware reset */
+	__mpu_write_PWR_MGMT_1(dev, PWR_MGMT_1__DEVICE_RESET);
+	/* wait for reset cycle to finish */
+	do {
+		up_mdelay(50); /* msecs (arbitrary) */
+	} while (__mpu_read_PWR_MGMT_1(dev) & PWR_MGMT_1__DEVICE_RESET);
+
+	/* reset signal paths */
+	__mpu_write_SIGNAL_PATH_RESET(dev, SIGNAL_PATH_RESET__ALL_RESET);
+	up_mdelay(2);
+	
+	/* disable SLEEP, use PLL with z-axis clock source */
+	__mpu_write_PWR_MGMT_1(dev, 3);
+	up_mdelay(2);
+	
+	/* disable i2c if we're on spi */
+	if (dev->spi)
+		__mpu_write_USER_CTRL(dev, USER_CTRL__I2C_IF_DIS);
+
+	/* disable low-power mode, enable all gyros and accelerometers */
+	__mpu_write_PWR_MGMT_2(dev, 0);
+
+	/* no FSYNC, accel LPF 184 Hz, gyro LPF 188 Hz */
+	__mpu_write_CONFIG(dev, 0, 1);
+
+	/* +/- 500 deg/sec */
+	__mpu_write_GYRO_CONFIG(dev, 1);
+
+	/* +/- 4g */
+	__mpu_write_ACCEL_CONFIG(dev, 1);
+
+	/* clear INT on any read */
+	__mpu_write_INT_PIN_CFG(dev, INT_PIN_CFG__INT_RD_CLEAR);
+
+	/* TODO: unlock the dev structure */
+	return 0;
+}
+      
 #if 0
 
 /****************************************************************************
@@ -641,16 +791,9 @@ static void adxl372_dvr_exchange(FAR void *instance_handle,
  * Name: mpu60x0_open
  ****************************************************************************/
 
- static int mpu60x0_open(FAR struct file *filep)
+ static int mpu_open(FAR struct file *filep)
 {
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu_dev_s *priv = inode->i_private;
-  int ret = 0;
-
-  UNUSED(inode);
-  UNUSED(priv);
-
-  return ret;
+	return 0;
 }
 
 /****************************************************************************
@@ -665,7 +808,6 @@ static int mpu60x0_close(FAR struct file *filep)
 
   UNUSED(inode);
   UNUSED(priv);
-snerr("%s: %p %p\n", __FUNCTION__, inode, priv);
 
   return ret;
 }
@@ -674,17 +816,14 @@ snerr("%s: %p %p\n", __FUNCTION__, inode, priv);
  * Name: mpu60x0_read
  ****************************************************************************/
 
-static ssize_t mpu60x0_read(FAR struct file *filep, FAR char* buf, size_t len)
+static ssize_t mpu60x0_read(FAR struct file* filep, FAR char* buf, size_t len)
 {
-  FAR struct inode *inode = filep->f_inode;
-  FAR struct mpu_dev_s *priv = inode->i_private;
+  FAR struct inode* inode = filep->f_inode;
+  FAR struct mpu_dev_s* dev = inode->i_private;
 
-  UNUSED(inode);
-  UNUSED(priv);
-
-  snerr("%s: %p %p\n", __FUNCTION__, inode, priv);
-
-  return 0;
+  if (len > 14) len = 14; /* TODO: find a better way to deal with this */
+  ssize_t ret = __mpu_read_imu(dev, (uint8_t*)buf, len);
+  return ret;
 }
 
 /****************************************************************************
@@ -740,7 +879,7 @@ static int mpu60x0_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
 
 static const struct file_operations g_mpu60x0_fops =
 {
-  mpu60x0_open,
+  mpu_open,
   mpu60x0_close,
   mpu60x0_read,
   mpu60x0_write,
@@ -805,9 +944,13 @@ int mpu60x0_register(FAR const char* path,
       return ret;
     }
 
-  uint8_t whoami = __mpu_read_WHO_AM_I(priv);
-  sninfo("INFO: WHO_AM_I = %x\n", whoami);
-  
+  _info("whoami = %x\n", __mpu_read_WHO_AM_I(priv));
+  _info("whoami = %x\n", __mpu_read_WHO_AM_I(priv));
+
+  mpu_reset(priv);
+
+  _info("whoami = %x\n", __mpu_read_WHO_AM_I(priv));
+
   return 0;
 }
 
