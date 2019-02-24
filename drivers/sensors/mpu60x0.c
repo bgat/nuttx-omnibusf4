@@ -247,9 +247,8 @@ struct mpu_dev_s
 	mutex_t lock;                    /* mutex for this structure */
 	struct mpu_config_s* config;
 
-	uint8_t* buf;                    /* temporary buffer (for read(), etc.) */
-	size_t buflen;                   /* size of @buf, in bytes */
-	size_t bufpos;                   /* cursor into @buf */
+	struct sensor_data_s buf;        /* temporary buffer (for read(), etc.) */
+	size_t bufpos;                   /* cursor into @buf, in bytes (!) */
 };
 
 /* NOTE: functions named with a double leading-underscore should be invoked
@@ -313,11 +312,9 @@ static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
 }
 
 /* reads the whole IMU data file in one pass */
-static inline int __mpu_read_imu(FAR struct mpu_dev_s* dev, uint8_t* buf, uint8_t len)
+static inline int __mpu_read_imu(FAR struct mpu_dev_s* dev, struct sensor_data_s* buf)
 {
-	uint8_t nreg = (GYRO_ZOUT_L - ACCEL_XOUT_H + 1);
-	__mpu_read_reg(dev, ACCEL_XOUT_H, buf, nreg < len ? nreg : len);
-	return nreg;
+	return __mpu_read_reg(dev, ACCEL_XOUT_H, (uint8_t*)buf, sizeof(*buf));
 }
 
 static inline uint8_t __mpu_read_PWR_MGMT_1(FAR struct mpu_dev_s* dev)
@@ -413,11 +410,6 @@ static inline uint8_t __mpu_read_WHO_AM_I(FAR struct mpu_dev_s* dev)
 	return val;
 }
 
-#if 0
-#define MPU_LOCK(m) do { nxmutex_lock(&(m)->lock); } while(0)
-#define MPU_UNLOCK(m) do { nxmutex_unlock(&(m)->lock); } while(0)
-#endif
-
 /*
  */
 static void inline mpu_lock(FAR struct mpu_dev_s* dev)
@@ -459,46 +451,39 @@ static int mpu_reset(FAR struct mpu_dev_s* dev)
 	/* no FSYNC, accel LPF 184 Hz, gyro LPF 188 Hz */
 	__mpu_write_CONFIG(dev, 0, 1);
 
-	/* +/- 500 deg/sec */
-	__mpu_write_GYRO_CONFIG(dev, 1);
+	/* +/- 1000 deg/sec */
+	__mpu_write_GYRO_CONFIG(dev, 2);
 
-	/* +/- 4g */
-	__mpu_write_ACCEL_CONFIG(dev, 1);
+	/* +/- 8g */
+	__mpu_write_ACCEL_CONFIG(dev, 2);
 
-	/* clear INT on any read */
+	/* clear INT on any read (we aren't using that pin right now) */
 	__mpu_write_INT_PIN_CFG(dev, INT_PIN_CFG__INT_RD_CLEAR);
 
 	mpu_unlock(dev);
 	return 0;
 }
 
-/* allocates the buffer used for queueing read()s */
-static void __mpu_alloc_buf(FAR struct mpu_dev_s* dev)
-{
-	dev->buflen = GYRO_ZOUT_L - ACCEL_XOUT_H + 1;
-	dev->bufpos = 0;
-	dev->buf = kmm_malloc(dev->buflen);
-}
-
-/* deallocates the buffer used for queueing read()s */
-static void __mpu_dealloc_buf(FAR struct mpu_dev_s* dev)
-{
-	if (dev->buf)
-	{
-		kmm_free(dev->buf);
-		dev->buf = NULL;
-		dev->buflen = 0;
-		dev->bufpos = 0;
-	}
-}
 
 /****************************************************************************
  * Name: mpu_open
+ *
+ * Note: we don't deal with multiple users trying to access this interface at
+ * the same time.
+ *
  ****************************************************************************/
 
 static int mpu_open(FAR struct file *filep)
 {
-	return 0;
+  FAR struct inode *inode = filep->f_inode;
+  FAR struct mpu_dev_s *dev = inode->i_private;
+
+  /* reset the register cache */
+  mpu_lock(dev);
+  dev->bufpos = 0;
+  mpu_unlock(dev);
+
+  return 0;
 }
 
 /****************************************************************************
@@ -510,59 +495,74 @@ static int mpu_close(FAR struct file *filep)
   FAR struct inode *inode = filep->f_inode;
   FAR struct mpu_dev_s *dev = inode->i_private;
 
+  /* reset the register cache */
   mpu_lock(dev);
-  __mpu_dealloc_buf(dev);
+  dev->bufpos = 0;
   mpu_unlock(dev);
-  
-  int ret = 0;
-  return ret;
+
+  return 0;
 }
 
 /****************************************************************************
  * Name: mpu_read
+ *
+ * Returns a snapshot of the accelerometer, gyro, and temperature registers.
+ *
+ * Note: the chip uses traditional, twos-complement notation, i.e. "0" is
+ * encoded as 0, and full-scale-negative is 0x8000, and full-scale-positive is
+ * 0x7fff. If we read the registers sequentially and directly into memory, the
+ * measurements from each sensor are stored as big endian words.
+ *
+ * In contrast, ASN.1 maps "0" to 0x8000, full-scale-negative to 0, and
+ * full-scale-positive to 0xffff. So if we want to send in a format that an
+ * ASN.1 PER-decoder would recognize, add 0x8000 to the values returned by the
+ * chip before sending, and send each word in big-endian order. The result
+ * would be something like this:
+ *
+ *    Sint16  ::= INTEGER(-32768..32767)
+ *
+ *    Mpu60x0Sample ::= SEQUENCE {
+ *        accel-X  Sint16,
+ *        accel-Y  Sint16,
+ *        accel-Z  Sint16,
+ *        temp     Sint16,
+ *        gyro-X   Sint16,
+ *        gyro-Y   Sint16,
+ *        gyro-Z   Sint16
+ * }
+ *
  ****************************************************************************/
 
 static ssize_t mpu_read(FAR struct file* filep, FAR char* buf, size_t len)
 {
-  FAR struct inode* inode = filep->f_inode;
-  FAR struct mpu_dev_s* dev = inode->i_private;
-  ssize_t ret = 0;
+	FAR struct inode* inode = filep->f_inode;
+	FAR struct mpu_dev_s* dev = inode->i_private;
 
-  mpu_lock(dev);
+	mpu_lock(dev);
 
-  if (!dev->buf) /* if it's our first read, allocate a new buffer */
-	  __mpu_alloc_buf(dev);
-
-  if (!dev->buf)
-  {
-	  ret = -ENOMEM;
-	  goto done;
-  }
-
-  /* populate the buffer on the first read */
-  if (!dev->bufpos)
-	  __mpu_read_imu(dev, dev->buf, dev->buflen);
+	/* populate the buffer if it seems empty */
+	if (!dev->bufpos)
+		__mpu_read_imu(dev, &dev->buf);
   
-  /* how many bytes are available to send? */
-  size_t max_len = dev->buflen - dev->bufpos;
+	/* how many bytes are available to send? */
+	size_t send_len = sizeof(dev->buf) - dev->bufpos;
 
-  /* how many will fit? */
-  if (max_len > len)
-	  max_len = len;
+	/* send as many as will fit */
+	if (send_len > len)
+		send_len = len;
+	if (send_len)
+		memcpy(buf, ((uint8_t*)&dev->buf) + dev->bufpos, send_len);
+
+	/* move the cursor, to mark them as sent */
+	dev->bufpos += send_len;
+
+	/* if we've sent the last byte, reset the buffer */
+	if (dev->bufpos >= sizeof(dev->buf))
+		dev->bufpos = 0;
+
+	mpu_unlock(dev);
   
-  /* copy over that many */
-  if (max_len)
-	  memcpy(buf, dev->buf + dev->bufpos, max_len);
-
-  /* mark them as sent */
-  dev->bufpos += max_len;
-  ret = max_len;
-
-done:
-  mpu_unlock(dev);
-  
-  /* ... and tell them how many we're sending */
-  return ret;
+	return send_len;
 }
 
 /****************************************************************************
@@ -637,7 +637,7 @@ static const struct file_operations g_mpu_fops =
  *   Register the mpu60x0 interface as 'devpath'
  *
  * Input Parameters:
- *   devpath  - The full path to the interface to register. E.g., "/dev/acl0"
+ *   devpath  - The full path to the interface to register. E.g., "/dev/imu0"
  *   spi      - SPI interface for chip communications
  *   config   - Configuration information 
  *
