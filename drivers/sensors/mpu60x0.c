@@ -183,6 +183,7 @@ typedef enum {
 	EXT_SENS_DATA_21 = 0x5e, /* RO */
 	EXT_SENS_DATA_22 = 0x5f, /* RO */
 	EXT_SENS_DATA_23 = 0x60, /* RO */
+
 	I2C_SLV0_DO = 0x63,
 	I2C_SLV1_DO = 0x64,
 	I2C_SLV2_DO = 0x65,
@@ -266,10 +267,14 @@ static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
 	int ret = len;
 
 	SPI_LOCK(dev->spi, true);
+	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
 
 	/* TODO: some registers can be clocked faster than this */
-	SPI_SETFREQUENCY(dev->spi, 1000000);
-	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
+	if ((reg_addr >= ACCEL_XOUT_H)
+	    && ((reg_addr + len) <= I2C_SLV0_DO))
+		SPI_SETFREQUENCY(dev->spi, 20000000);
+	else
+		SPI_SETFREQUENCY(dev->spi, 1000000);
 
 	SPI_SELECT(dev->spi, dev->config->spi_devid, true);
 
