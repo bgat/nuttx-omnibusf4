@@ -225,6 +225,10 @@ typedef enum {
 #define MPU_REG_READ 0x80
 #define MPU_REG_WRITE 0
 
+/*
+ * Describes the mpu60x0 sensor register file. This structure reflects the
+ * underlying hardware, so don't change it!
+*/
 struct sensor_data_s
 {
   int16_t x_accel;
@@ -242,6 +246,7 @@ struct mpu_config_s
 	int spi_devid;
 };
 
+/* used by the driver to manage the device */
 struct mpu_dev_s
 {
 	FAR struct spi_dev_s* spi;       /* SPI instance */
@@ -252,11 +257,14 @@ struct mpu_dev_s
 	size_t bufpos;                   /* cursor into @buf, in bytes (!) */
 };
 
-/* NOTE: functions named with a double leading-underscore should be invoked
- * ONLY if the mpu_dev_s lock is held
+/* NOTE: in the following, functions named with a double leading-underscore
+ * must be invoked ONLY if the mpu_dev_s lock is held!
  */
 
-/* TODO: there are ways of combining this with __mpu_write_reg()... */
+/*
+ * TODO: this should really be __mpu_spi_transfer(), since read() and write()
+ * are basically the same thing...
+ */
 static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
 			  mpu_regaddr_t reg_addr,
 			  uint8_t *buf, uint8_t len)
@@ -269,7 +277,8 @@ static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
 	SPI_LOCK(dev->spi, true);
 	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
 
-	/* TODO: some registers can be clocked faster than this */
+	/* read at 20MHz if it's a data register, 1MHz otherwise (per
+	 * datasheet) */
 	if ((reg_addr >= ACCEL_XOUT_H)
 	    && ((reg_addr + len) <= I2C_SLV0_DO))
 		SPI_SETFREQUENCY(dev->spi, 20000000);
@@ -278,8 +287,10 @@ static int __mpu_read_reg(FAR struct mpu_dev_s* dev,
 
 	SPI_SELECT(dev->spi, dev->config->spi_devid, true);
 
+	/* send the read request */
 	SPI_SEND(dev->spi, reg_addr | MPU_REG_READ);
 
+	/* clock in the data */
 	while (0 != len--)
 		*buf++ = (uint8_t)(SPI_SEND(dev->spi, 0xff));
 
@@ -299,14 +310,17 @@ static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
 	int ret = len;
 
 	SPI_LOCK(dev->spi, true);
-
-	SPI_SETFREQUENCY(dev->spi, 1000000);
 	SPI_SETMODE(dev->spi, SPIDEV_MODE0);
+
+	/* all writeable registers use 1MHz */
+	SPI_SETFREQUENCY(dev->spi, 1000000);
 
 	SPI_SELECT(dev->spi, dev->config->spi_devid, true);
 
+	/* send the write request */
 	SPI_SEND(dev->spi, reg_addr | MPU_REG_WRITE);
 
+	/* send the data */
 	while (0 != len--)
 		SPI_SEND(dev->spi, *buf++);
 
@@ -316,7 +330,9 @@ static int __mpu_write_reg(FAR struct mpu_dev_s* dev,
 	return ret;
 }
 
-/* reads the whole IMU data file in one pass */
+/* reads the whole IMU data file in one pass, which is necessary to assure that
+ * the values are all sampled as close to the same time as the hardware
+ * permits */
 static inline int __mpu_read_imu(FAR struct mpu_dev_s* dev, struct sensor_data_s* buf)
 {
 	return __mpu_read_reg(dev, ACCEL_XOUT_H, (uint8_t*)buf, sizeof(*buf));
@@ -416,24 +432,29 @@ static inline uint8_t __mpu_read_WHO_AM_I(FAR struct mpu_dev_s* dev)
 }
 
 /*
+ * Locks and unlocks the @dev data structure (mutex)
  */
 static void inline mpu_lock(FAR struct mpu_dev_s* dev)
 {
 	nxmutex_lock(&dev->lock);
 }
-
 static void inline mpu_unlock(FAR struct mpu_dev_s* dev)
 {
 	nxmutex_unlock(&dev->lock);
 }
 
+/*
+ * Resets the mpu60x0, sets it to a default configuration
+ */
 static int mpu_reset(FAR struct mpu_dev_s* dev)
 {
 	mpu_lock(dev);
 	
 	/* awaken chip, issue hardware reset */
 	__mpu_write_PWR_MGMT_1(dev, PWR_MGMT_1__DEVICE_RESET);
-	/* wait for reset cycle to finish */
+
+	/* wait for reset cycle to finish (note: per the datasheet, we don't
+	 * need to hold NSS for this) */
 	do {
 		up_mdelay(50); /* msecs (arbitrary) */
 	} while (__mpu_read_PWR_MGMT_1(dev) & PWR_MGMT_1__DEVICE_RESET);
@@ -446,14 +467,15 @@ static int mpu_reset(FAR struct mpu_dev_s* dev)
 	__mpu_write_PWR_MGMT_1(dev, 3);
 	up_mdelay(2);
 	
-	/* disable i2c if we're on spi */
+	/* disable i2c if we're on spi (right now SPI is all we support, but
+	 * that won't be true forever) */
 	if (dev->spi)
 		__mpu_write_USER_CTRL(dev, USER_CTRL__I2C_IF_DIS);
 
 	/* disable low-power mode, enable all gyros and accelerometers */
 	__mpu_write_PWR_MGMT_2(dev, 0);
 
-	/* no FSYNC, accel LPF 184 Hz, gyro LPF 188 Hz */
+	/* no FSYNC, set accel LPF at 184 Hz, gyro LPF at 188 Hz */
 	__mpu_write_CONFIG(dev, 0, 1);
 
 	/* +/- 1000 deg/sec */
@@ -474,7 +496,7 @@ static int mpu_reset(FAR struct mpu_dev_s* dev)
  * Name: mpu_open
  *
  * Note: we don't deal with multiple users trying to access this interface at
- * the same time.
+ * the same time. Don't do that.
  *
  ****************************************************************************/
 
@@ -511,18 +533,19 @@ static int mpu_close(FAR struct file *filep)
 /****************************************************************************
  * Name: mpu_read
  *
- * Returns a snapshot of the accelerometer, gyro, and temperature registers.
+ * Returns a snapshot of the accelerometer, temperature, and gyro registers.
  *
  * Note: the chip uses traditional, twos-complement notation, i.e. "0" is
  * encoded as 0, and full-scale-negative is 0x8000, and full-scale-positive is
- * 0x7fff. If we read the registers sequentially and directly into memory, the
- * measurements from each sensor are stored as big endian words.
+ * 0x7fff. If we read the registers sequentially and directly into memory (we
+ * do), the measurements from each sensor are stored as big endian words.
  *
  * In contrast, ASN.1 maps "0" to 0x8000, full-scale-negative to 0, and
  * full-scale-positive to 0xffff. So if we want to send in a format that an
- * ASN.1 PER-decoder would recognize, add 0x8000 to the values returned by the
- * chip before sending, and send each word in big-endian order. The result
- * would be something like this:
+ * ASN.1 PER-decoder would recognize, treat the chip values as unsigned, add
+ * 0x8000 to each measurement, and send each word in big-endian order. The
+ * result will be something you would describe like this (confirmed with
+ * asn1scc):
  *
  *    Sint16  ::= INTEGER(-32768..32767)
  *
@@ -545,7 +568,7 @@ static ssize_t mpu_read(FAR struct file* filep, FAR char* buf, size_t len)
 
 	mpu_lock(dev);
 
-	/* populate the buffer if it seems empty */
+	/* populate the register cache if it seems empty */
 	if (!dev->bufpos)
 		__mpu_read_imu(dev, &dev->buf);
   
@@ -639,7 +662,7 @@ static const struct file_operations g_mpu_fops =
  * Name: mpu60x0_register
  *
  * Description:
- *   Register the mpu60x0 interface as 'devpath'
+ *   Registers the mpu60x0 interface as 'devpath'
  *
  * Input Parameters:
  *   devpath  - The full path to the interface to register. E.g., "/dev/imu0"
@@ -649,10 +672,15 @@ static const struct file_operations g_mpu_fops =
  * Returned Value:
  *   Zero (OK) on success; a negated errno value on failure.
  *
+ * Note:
+ *   When we someday support i2c, we'll add a parameter for it here; then
+ *   users will set either @i2c or @spi to NULL depending on which one
+ *   they're using.
  ****************************************************************************/
 
 int mpu60x0_register(FAR const char* path,
                      FAR struct spi_dev_s* spi,
+		     /* FAR struct i2c_master_s* i2c, */
 		     FAR struct mpu_config_s* config)
 {
   FAR struct mpu_dev_s* priv;
